@@ -18,7 +18,7 @@ setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs")
 # use the raster stack with all the WRF_chem output
 
 # get only one image
-WRF_STACK_image <- raster("DUST_WRFChem_02_April_2015.tif", band = 2)
+WRF_STACK_image <- raster("DUST_WRFChem_02_April_2015_stack.tif", band = 2)
 plot(WRF_STACK_image)
 
 # get the extent of the raster
@@ -74,7 +74,7 @@ plot(shp_UAE, add=TRUE, lwd=1)
 setwd("D:/Dust_Event_UAE_2015/MODIS_10km/TERRA")
 filenames_TERRA <- list.files(pattern = ".csv")
 
-# kriging_points <- function(filenames_TERRA, resl_ras= 0.1, shp_WRF = "Z:/_SHARED_FOLDERS/Dust_Event_UAE_2015/WRFChem_domain"){
+# kriging_points <- function(filenames_TERRA, resl_ras= 0.1, shp_WRF = "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"){
   kriging_points <- function(filenames_TERRA, resl_ras= 0.1, shp_WRF = "D:/Dust_Event_UAE_2015/WRFChem_domain"){
     
   date <- str_sub(filenames_TERRA, start = 11, end = -14)

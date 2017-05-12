@@ -7,7 +7,7 @@ library(stringr)
 
 
 # list .nc files
-setwd("D:/Dust_Event_UAE_2015/trial_runs")
+setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs")
 patt<- ".nc"
 filenames <- list.files(pattern = patt)
 filenames <- filenames
@@ -31,7 +31,7 @@ filenames <- filenames
   #### only one variable (DUST_5) == var = 156
   
   # for(j in 156:156) {
-     var_value<-(WRF_file[156])
+     var_value<-(WRF_file[156])    #  only one variable (DUST_5) == var = 156
      names(var_value)<- "xxyyzz"
      var_value<- (var_value$xxyyzz)
      LON<-WRF_file$XLONG[, ,2]

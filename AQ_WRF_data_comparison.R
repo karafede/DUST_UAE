@@ -7,18 +7,24 @@ library(rgdal)
 # install.packages("NISTunits", dependencies = TRUE)
 library(NISTunits)
 
-setwd("D:/Dust_Event_UAE_2015")
+# setwd("D:/Dust_Event_UAE_2015")
+setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015")
 source("extract_pnt_raster.R")
 
 # set directory where there are UNFILTERED ORIGINAL AQ data from 2015-------------------
 dir_AQ <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 1/Pathflow of Phase I_DG/dawit Data/Hourly Database format CSV/Arranged dates"
 # dir_AQ <- "E:/MASDAR_FK/Air Quality/Phase 1/Pathflow of Phase I_DG/dawit Data/Hourly Database format CSV/Arranged dates"
+# new direrctroy of processed AQ data (used R function)
+dir_AQ <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 1/Pathflow of Phase I_DG/dawit Data/Hourly Database format CSV/hourly_FK_new/hourly_data/test_FK"
 
 
+# EAD_AQ_2015 <- read.csv(paste0(dir_AQ, "/","database_EAD_2015_hourly.csv"))
+# DM_AQ_2015 <- read.csv(paste0(dir_AQ, "/","database_DM_2015_hourly.csv"))
+# NCMS_AQ_2015 <- read.csv(paste0(dir_AQ, "/","database_NCMS_2015_hourly.csv"))
 
-EAD_AQ_2015 <- read.csv(paste0(dir_AQ, "/","database_EAD_2015_hourly.csv"))
-DM_AQ_2015 <- read.csv(paste0(dir_AQ, "/","database_DM_2015_hourly.csv"))
-NCMS_AQ_2015 <- read.csv(paste0(dir_AQ, "/","database_NCMS_2015_hourly.csv"))
+EAD_AQ_2015 <- read.csv(paste0(dir_AQ, "/","database_EAD data 2015_hourly.csv"))
+DM_AQ_2015 <- read.csv(paste0(dir_AQ, "/","database_DM data 2015_hourly.csv"))
+NCMS_AQ_2015 <- read.csv(paste0(dir_AQ, "/","database_NCMS data 2015_hourly.csv"))
 
 AQ_data_2015 <- rbind(EAD_AQ_2015, DM_AQ_2015, NCMS_AQ_2015)
 
@@ -26,21 +32,22 @@ AQ_data_2015 <- rbind(EAD_AQ_2015, DM_AQ_2015, NCMS_AQ_2015)
 
 AQ_data_2015_PM10 <- AQ_data_2015 %>%
   mutate(day = date(DateTime)) %>%
-  filter(day >= "2015-03-31" & day < "2015-04-03") %>%    # match WRFChem data
+  filter(day >= "2015-03-29" & day <= "2015-04-04") %>%    # match WRFChem data
   filter(Pollutant == "PM10")
   # filter(Pollutant %in% c("PM10", "PM2.5"))  # multiple filtering
 
 AQ_data_2015_PM25 <- AQ_data_2015 %>%
   mutate(day = date(DateTime)) %>%
-  filter(day >= "2015-03-31" & day < "2015-04-03") %>%    # match WRFChem data
+  filter(day >= "2015-03-29" & day <= "2015-04-04") %>%    # match WRFChem data
   filter(Pollutant == "PM2.5")
 # filter(Pollutant %in% c("PM10", "PM2.5"))
 
 AQ_data_2015_PM10 <- AQ_data_2015_PM10 %>%
-  mutate(DATETIME = ymd_hms(DateTime)) 
+  mutate(DATETIME = ymd_hms(DateTime)-300) 
+
 
 AQ_data_2015_PM25 <- AQ_data_2015_PM25 %>%
-  mutate(DATETIME = ymd_hms(DateTime)) 
+  mutate(DATETIME = ymd_hms(DateTime)-300) 
 
 
 # remove seconds
@@ -76,7 +83,7 @@ plot(shp_UAE)
 
 # load one WRF raster image.....just a trial...only one hour....2015-03-31_03_00
 
-WRF_STACK_image <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02_April_2015_stack.tif", band = 3)
+WRF_STACK_image <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 3)
 plot(WRF_STACK_image)
 
 # overlay shape of UAE border
@@ -97,15 +104,16 @@ sites_stations_PM25 <- AQ_data_2015_PM25[row.names(unique(AQ_data_2015_PM25[,c("
 ##############################################################################
 
 # read all bands in a stack raster
-WRF_STACK_image <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02_April_2015_stack.tif")
+WRF_STACK_image <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif")
 n <- length(WRF_STACK_image@layers)-1
 
 
 # generate a time sequence for the WRF-Chem run at intervals of 1 hour (should be 73 images)
-start <- as.POSIXct("2015-03-31 00:00:00")
+start <- as.POSIXct("2015-03-29 00:00:00")
 interval <- 60 #minutes
-end <- start + as.difftime(3, units="days")
+end <- start + as.difftime(6, units="days")
 TS <- seq(from=start, by=interval*60, to=end)   # same time series as the AQ data
+TS <- TS[1:144]
 
 # i <- 3
 
@@ -123,7 +131,7 @@ site_PM10 <- NULL
  for (i in 1:n) {   # this is a time
 #  for (i in 1:3) {
   
-  WRF_STACK_image <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02_April_2015_stack.tif", band = i)
+  WRF_STACK_image <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = i)
   plot(WRF_STACK_image)
   EXTRACTED_WRF_PM10 <- extract_points(WRF_STACK_image, sites_stations_PM10)
  # names(EXTRACTED_WRF) <- as.character(TS[i])
@@ -146,6 +154,7 @@ colnames(extracted_WRF_PM10) <- c("DATETIME", "WRF_CHEM", "Site")
 write.csv(extracted_WRF_PM10, "WRF_trial_runs/extracted_WRF_PM10.csv")
 extracted_WRF_PM10 <- read.csv("WRF_trial_runs/extracted_WRF_PM10.csv")
 
+# add 4 hours to WRF(UTC) DateTime ##############################################
 
 str(extracted_WRF_PM10)
 
@@ -154,6 +163,9 @@ extracted_WRF_PM10 <- extracted_WRF_PM10 %>%
 
 str(extracted_WRF_PM10)
 
+extracted_WRF_PM10 <- extracted_WRF_PM10 %>%
+  mutate(DATETIME = DATETIME + 14400)
+
 ######################################################################################################
 ######################################################################################################
 
@@ -161,46 +173,46 @@ str(extracted_WRF_PM10)
 #### PM2.5 #################################################################################
 ###########################################################################################
 
-# make an empty vector
-# extracted_WRF <- data.frame(matrix(ncol = 1, nrow = nrow(sites_stations)))
-# names(extracted_WRF) <- "empty"
-extracted_WRF_PM25 <- NULL
-DateTime_PM25 <- NULL
-site_PM25 <- NULL
-
-for (i in 1:n) {   # this is a time
-  #  for (i in 1:3) {
-  
-  WRF_STACK_image <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02_April_2015_stack.tif", band = i)
-  plot(WRF_STACK_image)
-  EXTRACTED_WRF_PM25 <- extract_points(WRF_STACK_image, sites_stations_PM25)
-  # names(EXTRACTED_WRF) <- as.character(TS[i])
-  # extracted_WRF = cbind(extracted_WRF, EXTRACTED_WRF)
-  extracted_WRF_PM25 = rbind(extracted_WRF_PM25, EXTRACTED_WRF_PM25)    # data vector
-  DATETIME_PM25 <- as.data.frame(rep(TS[i], nrow(sites_stations_PM25)))           # time vector
-  DateTime_PM25 <- rbind(DateTime_PM25, DATETIME_PM25)
-  SITE_PM25 <- as.data.frame(sites_stations_PM25$Site)
-  site_PM25 <- rbind(site_PM25, SITE_PM25)
-  
-}
-
-# extracted_WRF <- cbind(sites_stations$Longitude, sites_stations$Latitude, extracted_WRF)
-extracted_WRF_PM25 <- cbind(DateTime_PM25, extracted_WRF_PM25, site_PM25)   # it should be the same length od the AQ_data_2015
-colnames(extracted_WRF_PM25) <- c("DATETIME", "WRF_CHEM", "Site")
-# remove seconds
-
-
-# save data-------------------------------------
-write.csv(extracted_WRF_PM25, "WRF_trial_runs/extracted_WRF_PM25.csv")
-extracted_WRF_PM25 <- read.csv("WRF_trial_runs/extracted_WRF_PM25.csv")
-
-
-str(extracted_WRF_PM25)
-
-extracted_WRF_PM25 <- extracted_WRF_PM25 %>%
-  mutate(DATETIME = ymd_hms(DATETIME))
-
-str(extracted_WRF_PM25)
+# # make an empty vector
+# # extracted_WRF <- data.frame(matrix(ncol = 1, nrow = nrow(sites_stations)))
+# # names(extracted_WRF) <- "empty"
+# extracted_WRF_PM25 <- NULL
+# DateTime_PM25 <- NULL
+# site_PM25 <- NULL
+# 
+# for (i in 1:n) {   # this is a time
+#   #  for (i in 1:3) {
+#   
+#   WRF_STACK_image <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = i)
+#   plot(WRF_STACK_image)
+#   EXTRACTED_WRF_PM25 <- extract_points(WRF_STACK_image, sites_stations_PM25)
+#   # names(EXTRACTED_WRF) <- as.character(TS[i])
+#   # extracted_WRF = cbind(extracted_WRF, EXTRACTED_WRF)
+#   extracted_WRF_PM25 = rbind(extracted_WRF_PM25, EXTRACTED_WRF_PM25)    # data vector
+#   DATETIME_PM25 <- as.data.frame(rep(TS[i], nrow(sites_stations_PM25)))           # time vector
+#   DateTime_PM25 <- rbind(DateTime_PM25, DATETIME_PM25)
+#   SITE_PM25 <- as.data.frame(sites_stations_PM25$Site)
+#   site_PM25 <- rbind(site_PM25, SITE_PM25)
+#   
+# }
+# 
+# # extracted_WRF <- cbind(sites_stations$Longitude, sites_stations$Latitude, extracted_WRF)
+# extracted_WRF_PM25 <- cbind(DateTime_PM25, extracted_WRF_PM25, site_PM25)   # it should be the same length od the AQ_data_2015
+# colnames(extracted_WRF_PM25) <- c("DATETIME", "WRF_CHEM", "Site")
+# # remove seconds
+# 
+# 
+# # save data-------------------------------------
+# write.csv(extracted_WRF_PM25, "WRF_trial_runs/extracted_WRF_PM25.csv")
+# extracted_WRF_PM25 <- read.csv("WRF_trial_runs/extracted_WRF_PM25.csv")
+# 
+# 
+# str(extracted_WRF_PM25)
+# 
+# extracted_WRF_PM25 <- extracted_WRF_PM25 %>%
+#   mutate(DATETIME = ymd_hms(DATETIME))
+# 
+# str(extracted_WRF_PM25)
 
 ######################################################################################################
 ######################################################################################################
@@ -218,10 +230,10 @@ AQ_WRF_2015_PM10 <- AQ_data_2015_PM10 %>%
 
 write.csv(AQ_WRF_2015_PM10, "WRF_trial_runs/AQ_Data_WRF_2_April_2015_PM10.csv")
 
-AQ_WRF_2015_PM25 <- AQ_data_2015_PM25 %>%
-  merge(extracted_WRF_PM25, by = c("Site", "DATETIME"))
-
-write.csv(AQ_WRF_2015_PM25, "WRF_trial_runs/AQ_Data_WRF_2_April_2015_PM25.csv")
+# AQ_WRF_2015_PM25 <- AQ_data_2015_PM25 %>%
+#   merge(extracted_WRF_PM25, by = c("Site", "DATETIME"))
+# 
+# write.csv(AQ_WRF_2015_PM25, "WRF_trial_runs/AQ_Data_WRF_2_April_2015_PM25.csv")
 
 
 ################################################################################
@@ -239,31 +251,102 @@ library(plyr)
 
 
 AQ_WRF_2015_PM10 <- read.csv("WRF_trial_runs/AQ_Data_WRF_2_April_2015_PM10.csv")
-
 # AQ_WRF_2015 <- read.csv("AQ_Data_WRF_2_April_2015_PM25.csv")
 
+AQ_WRF_2015_PM10 <- AQ_WRF_2015_PM10 %>%
+  mutate(DATETIME = ymd_hms(DATETIME))
+
+# remove empty stations
+AQ_WRF_2015_PM10 <- na.omit(AQ_WRF_2015_PM10)
+
+###################################################################################################################
+######### plot TIME-SERIES of AQ PM10 data and WRF PM10 data ######################################################
+###################################################################################################################
+
+jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/AQ_PM10_vs_WRF_TimeSeries.jpg',
+     quality = 100, bg = "white", res = 300, width = 18, height = 9, units = "in")
+par(mar=c(4, 10, 9, 2) + 0.3)
+oldpar <- par(las=1)
+
+
+plot <- ggplot(AQ_WRF_2015_PM10, aes(DATETIME, Value)) + 
+  theme_bw() +
+  geom_line(aes(y = Value, col = "Value"), alpha=1, col="red") +
+  geom_line(aes(y = WRF_CHEM, col = "WRF_CHEM"), alpha=1, col="blue") +
+  facet_wrap( ~ Site, ncol=4) +
+  theme(legend.position="none") + 
+  theme(strip.text = element_text(size = 12)) + 
+  ylab(expression(paste(PM[10], " (µg/",m^3, ")", " AQ & WRFChem (hourly)"))) + 
+  theme(axis.title.x=element_blank(),
+        axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=14, colour = "black", face="bold")) +
+  theme(axis.title.y = element_text(face="bold", colour="black", size=14),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=14, colour = "black")) +
+  ylim(0, 3000)  
+plot
+
+
+par(oldpar)
+dev.off()
+
+###################################################################################################################
+###################################################################################################################
+
 # check your data  PM10 measurements ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/PM10_measured_hourly.jpg',
+     quality = 100, bg = "white", res = 300, width = 9, height = 9, units = "in")
+par(mar=c(4, 10, 9, 2) + 0.3)
+oldpar <- par(las=1)
+
 plot <- ggplot(AQ_WRF_2015_PM10, aes(Site, Value)) +
   theme_bw() +
   geom_boxplot() + 
-  guides(fill=FALSE)  +
-  ylim(0, 1500) 
+  theme(axis.title.x=element_blank(),
+        axis.text.x  = element_text(angle=90, vjust=0.5, hjust = 1, size=12, colour = "black", face="bold")) +
+  ylab(expression(paste(PM[10], " (µg/",m^3, ")  Measured (hourly)"),size=20)) + 
+  theme(axis.title.y = element_text(face="bold", colour="black", size=20),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=20, colour = "black")) +
+  guides(fill=FALSE)  
 plot
+
+
+par(oldpar)
+dev.off()
+
+
+
+
 
 # WRF chem data
+
+jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/WRFChem_PM10.jpg',
+     quality = 100, bg = "white", res = 300, width = 9, height = 9, units = "in")
+par(mar=c(4, 10, 9, 2) + 0.3)
+oldpar <- par(las=1)
+
 plot <- ggplot(AQ_WRF_2015_PM10, aes(Site, WRF_CHEM)) +
   theme_bw() +
-  geom_boxplot() + 
-  guides(fill=FALSE)  +
-  ylim(0, 1500) 
+  geom_boxplot() +  
+  theme(axis.title.x=element_blank(),
+  axis.text.x  = element_text(angle=90, vjust=0.5, hjust = 1, size=12, colour = "black", face="bold")) +
+  ylab(expression(paste(PM[10], " (µg/",m^3, ")  WRFChem- DUST only (hourly)"),size=20)) + 
+  theme(axis.title.y = element_text(face="bold", colour="black", size=20),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=20, colour = "black")) +
+  guides(fill=FALSE)  
 plot
 
+
+par(oldpar)
+dev.off()
+
+
+
+
 AQ_WRF_2015_PM10 <- AQ_WRF_2015_PM10 %>%
-  filter(Value < 600) %>%   #check background value (this value has been estimated from the above boxplot)
+  filter(Value < 2500) %>%   #check background value (this value has been estimated from the above boxplot)
   filter(Value > 0) %>%
-  filter(WRF_CHEM > 0) %>%
-  filter(WRF_CHEM < 600)
-  
+  filter(WRF_CHEM >0)
+ # filter(WRF_CHEM < 1000)
+
   
 
 #### fit function and label for PM AQ and WRF-CHEM data  ########################
@@ -294,8 +377,8 @@ lm_eqn <- function(df){
 
 # plot with regression line-----
 
-jpeg('D:/Dust_Event_UAE_2015/WRF_trial_runs/PM10_vs_WRF.jpg',    
-     quality = 100, bg = "white", res = 200, width = 15, height = 7, units = "in")
+jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/PM10_vs_WRF.jpg',    
+     quality = 100, bg = "white", res = 200, width = 15, height = 8, units = "in")
 par(mar=c(4, 10, 9, 2) + 0.3)
 oldpar <- par(las=1)
 
@@ -318,14 +401,14 @@ ggplot(AQ_WRF_2015_PM10, aes(x=WRF_CHEM, y=Value)) +
   geom_smooth(method = "lm", formula = y ~ -1 + x) +  # force fit through the origin
   ylab(expression(paste(PM[10], " (µg/",m^3, ")", " ", "measurements"))) +
   xlab(expression(paste(PM[10], " (µg/",m^3, ")", " ", "WRF-Chem"))) +
-  ylim(c(0, 800)) + 
-  xlim(c(0, 800)) +
+  ylim(c(0, 2500)) + 
+  xlim(c(0, 2500)) +
   theme(axis.title.y = element_text(face="bold", colour="black", size=12),
-        axis.text.y  = element_text(angle=0, vjust=0.5, size=10)) +
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=8)) +
   theme(axis.title.x = element_text(face="bold", colour="black", size=12),
         axis.text.x  = element_text(angle=0, vjust=0.5, size=10)) +
   
-  geom_text(data = eq_PM10, aes(x = 130, y = 700, label = V1),
+  geom_text(data = eq_PM10, aes(x = 2000, y = 2000, label = V1),
             parse = TRUE, inherit.aes=FALSE, size = 3, color = "black" )
 
 
@@ -334,73 +417,76 @@ par(oldpar)
 dev.off()
 
 
-################### PM2.5 versus WRF-chem Dust #############################
-
-AQ_WRF_2015_PM25 <- read.csv("WRF_trial_runs/AQ_Data_WRF_2_April_2015_PM25.csv")
-
-# check your data  PM2.5 measurements ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-plot <- ggplot(AQ_WRF_2015_PM25, aes(Site, Value)) +
-  theme_bw() +
-  geom_boxplot() + 
-  guides(fill=FALSE)  +
-  ylim(0, 500) 
-plot
-
-# WRF chem data
-plot <- ggplot(AQ_WRF_2015_PM25, aes(Site, WRF_CHEM)) +
-  theme_bw() +
-  geom_boxplot() + 
-  guides(fill=FALSE)  +
-  ylim(0, 1500) 
-plot
-
-AQ_WRF_2015_PM25 <- AQ_WRF_2015_PM25 %>%
-  filter(Value < 250) %>%   #check background value (this value has been estimated from the above boxplot)
-  filter(Value >= 0) %>%
-  filter(WRF_CHEM >= 0) %>%
-  filter(WRF_CHEM < 600)
-
-
-# plot with regression line-----
-
-jpeg('D:/Dust_Event_UAE_2015/WRF_trial_runs/PM25_vs_WRF.jpg',    
-     quality = 100, bg = "white", res = 200, width = 15, height = 7, units = "in")
-par(mar=c(4, 10, 9, 2) + 0.3)
-oldpar <- par(las=1)
-
-
-# define regression equation for each season
-eq_PM25 <- ddply(AQ_WRF_2015_PM25, .(Site),lm_eqn)
-
-
-# ggplot(PM25_AOD, aes(x=Val_AOD, y=Val_PM25, color = season)) +
-ggplot(AQ_WRF_2015_PM25, aes(x=WRF_CHEM, y=Value)) +
-  theme_bw() +
-  # geom_point(size = 2) +
-  geom_jitter(colour=alpha("black",0.15) ) +
-  facet_wrap( ~ Site, ncol=4) +
-  # facet_wrap( ~ day, ncol=2)
-  # facet_wrap( ~ Authority, ncol=2)
-  theme( strip.text = element_text(size = 12)) + 
-  scale_color_manual(values = c("#ff0000", "#0000ff", "#000000", "#ffb732")) + 
-  #  geom_smooth(method="lm") +  # Add linear regression line
-  geom_smooth(method = "lm", formula = y ~ -1 + x) +  # force fit through the origin
-  ylab(expression(paste(PM[2.5], " (µg/",m^3, ")", " ", "measurements"))) +
-  xlab(expression(paste(PM[2.5], " (µg/",m^3, ")", " ", "WRF-Chem"))) +
-  ylim(c(0, 250)) + 
-  xlim(c(0, 500)) +
-  theme(axis.title.y = element_text(face="bold", colour="black", size=12),
-        axis.text.y  = element_text(angle=0, vjust=0.5, size=10)) +
-  theme(axis.title.x = element_text(face="bold", colour="black", size=12),
-        axis.text.x  = element_text(angle=0, vjust=0.5, size=10)) +
-  
-  geom_text(data = eq_PM25, aes(x = 90, y = 200, label = V1),
-            parse = TRUE, inherit.aes=FALSE, size = 3, color = "black" )
 
 
 
-par(oldpar)
-dev.off()
+# ################### PM2.5 versus WRF-chem Dust #############################
+# 
+# AQ_WRF_2015_PM25 <- read.csv("WRF_trial_runs/AQ_Data_WRF_2_April_2015_PM25.csv")
+# 
+# # check your data  PM2.5 measurements ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# plot <- ggplot(AQ_WRF_2015_PM25, aes(Site, Value)) +
+#   theme_bw() +
+#   geom_boxplot() + 
+#   guides(fill=FALSE)  +
+#   ylim(0, 500) 
+# plot
+# 
+# # WRF chem data
+# plot <- ggplot(AQ_WRF_2015_PM25, aes(Site, WRF_CHEM)) +
+#   theme_bw() +
+#   geom_boxplot() + 
+#   guides(fill=FALSE)  +
+#   ylim(0, 1500) 
+# plot
+# 
+# AQ_WRF_2015_PM25 <- AQ_WRF_2015_PM25 %>%
+#   filter(Value < 250) %>%   #check background value (this value has been estimated from the above boxplot)
+#   filter(Value >= 0) %>%
+#   filter(WRF_CHEM >= 0) %>%
+#   filter(WRF_CHEM < 600)
+# 
+# 
+# # plot with regression line-----
+# 
+# jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/PM25_vs_WRF.jpg',    
+#      quality = 100, bg = "white", res = 200, width = 15, height = 7, units = "in")
+# par(mar=c(4, 10, 9, 2) + 0.3)
+# oldpar <- par(las=1)
+# 
+# 
+# # define regression equation for each season
+# eq_PM25 <- ddply(AQ_WRF_2015_PM25, .(Site),lm_eqn)
+# 
+# 
+# # ggplot(PM25_AOD, aes(x=Val_AOD, y=Val_PM25, color = season)) +
+# ggplot(AQ_WRF_2015_PM25, aes(x=WRF_CHEM, y=Value)) +
+#   theme_bw() +
+#   # geom_point(size = 2) +
+#   geom_jitter(colour=alpha("black",0.15) ) +
+#   facet_wrap( ~ Site, ncol=4) +
+#   # facet_wrap( ~ day, ncol=2)
+#   # facet_wrap( ~ Authority, ncol=2)
+#   theme( strip.text = element_text(size = 12)) + 
+#   scale_color_manual(values = c("#ff0000", "#0000ff", "#000000", "#ffb732")) + 
+#   #  geom_smooth(method="lm") +  # Add linear regression line
+#   geom_smooth(method = "lm", formula = y ~ -1 + x) +  # force fit through the origin
+#   ylab(expression(paste(PM[2.5], " (µg/",m^3, ")", " ", "measurements"))) +
+#   xlab(expression(paste(PM[2.5], " (µg/",m^3, ")", " ", "WRF-Chem"))) +
+#   ylim(c(0, 250)) + 
+#   xlim(c(0, 500)) +
+#   theme(axis.title.y = element_text(face="bold", colour="black", size=12),
+#         axis.text.y  = element_text(angle=0, vjust=0.5, size=10)) +
+#   theme(axis.title.x = element_text(face="bold", colour="black", size=12),
+#         axis.text.x  = element_text(angle=0, vjust=0.5, size=10)) +
+#   
+#   geom_text(data = eq_PM25, aes(x = 90, y = 200, label = V1),
+#             parse = TRUE, inherit.aes=FALSE, size = 3, color = "black" )
+# 
+# 
+# 
+# par(oldpar)
+# dev.off()
 
 
 

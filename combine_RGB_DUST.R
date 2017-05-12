@@ -124,6 +124,11 @@ image_write(left_to_right, path = paste(name, "_combined_RGB_DUST",".jpg", sep =
 
 
 
+
+
+
+
+
 # Example image
 frink <- image_read("https://jeroenooms.github.io/images/frink.png")
 
