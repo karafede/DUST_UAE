@@ -517,6 +517,16 @@ library(raster)
 library(classInt)
 library(stringr)
 
+#### import the Arabian Peninsusula domain #############
+
+dir_ME <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
+### shapefile for WRF_domain
+shp_ME <- readOGR(dsn = dir_ME, layer = "ADMIN_domain_d01_WRFChem")
+  
+shp_ME@data$name <- 1:nrow(shp_ME)
+plot(shp_ME)
+  
+  
 
 # gerate a time sequence of 6 days
 # start <- as.POSIXct("2015-03-29 10:30")  # MODIS TERRA
@@ -526,8 +536,8 @@ end <- start + as.difftime(5, units="days")  # 6 days
 TS <- seq(from=start, by=interval*60*2, to=end)
 
 # setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AVG_TERRA_MAIAC")
- setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA")
-# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA")
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA")
+ setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA")
 
 # i <- 5
 
@@ -538,8 +548,8 @@ for (i in 1:6) {
 # multiply raster by conversion factor from AOD to PM10
 # raster_MODIS <- raster(filenames[i])
 
- raster_MODIS_AQUA <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA/AQUA_MAIAC_DUST_event_02_April_2015.tif", band = i)*294
-# raster_MODIS_TERRA <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA/TERRA_MAIAC_DUST_event_02_April_2015.tif", band = i)*294
+# raster_MODIS_AQUA <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA/AQUA_MAIAC_DUST_event_02_April_2015.tif", band = i)*294
+ raster_MODIS_TERRA <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA/TERRA_MAIAC_DUST_event_02_April_2015.tif", band = i)*294
 # raster_MODIS <- raster(filenames[i])*294
 
 # plot(raster_MODIS)
@@ -550,8 +560,8 @@ name_time <- TS[i]
 
 # define popup for time scene
 "h1 { font-size: 3px;}"
-# content <- paste('<h1><strong>', name_time,'', " TERRA", sep = "")
-content <- paste('<h1><strong>', name_time,'', "  AQUA", sep = "")
+content <- paste('<h1><strong>', name_time,'', " TERRA", sep = "")
+# content <- paste('<h1><strong>', name_time,'', "  AQUA", sep = "")
 
 
 MIN_PAL <- 0.095*294
@@ -564,7 +574,7 @@ MAX_PAL <- 4*294
 pal_MODIS <- colorNumeric(rev(terrain.colors(255)),
                           c(MIN_PAL, MAX_PAL),na.color = "transparent")
 
-map <- leaflet() %>% 
+map <- leaflet(shp_ME) %>% 
   setView(51, 26, 5) %>%
   addTiles() %>% 
   addTiles(group = "OSM (default)") %>%
@@ -575,9 +585,14 @@ map <- leaflet() %>%
   addPopups(40, 35, content,
             options = popupOptions(closeButton = FALSE)) %>%
   
-  addRasterImage(raster_MODIS_AQUA, 
+  addRasterImage(raster_MODIS_TERRA, 
                  colors = pal_MODIS, 
                  opacity = 0.7, group = "MODIS", maxBytes = 8 * 1024 * 1024) %>%
+  
+  addPolygons(stroke = TRUE, smoothFactor = 1, fillOpacity = 0,
+              weight = 3, color = "#000000",
+              group = "ME") %>%
+  
   addLayersControl(
     baseGroups = c("Toner Lite", "Road map", "Satellite"),
     overlayGroups = "MODIS",

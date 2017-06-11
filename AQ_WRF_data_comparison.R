@@ -32,7 +32,7 @@ AQ_data_2015 <- rbind(EAD_AQ_2015, DM_AQ_2015, NCMS_AQ_2015)
 
 AQ_data_2015_PM10 <- AQ_data_2015 %>%
   mutate(day = date(DateTime)) %>%
-  filter(day >= "2015-03-29" & day <= "2015-04-04") %>%    # match WRFChem data
+#  filter(day >= "2015-03-29" & day <= "2015-04-04") %>%    # match WRFChem data
   filter(Pollutant == "PM10")
   # filter(Pollutant %in% c("PM10", "PM2.5"))  # multiple filtering
 
@@ -46,14 +46,29 @@ AQ_data_2015_PM10 <- AQ_data_2015_PM10 %>%
   mutate(DATETIME = ymd_hms(DateTime)-300) 
 
 
-AQ_data_2015_PM25 <- AQ_data_2015_PM25 %>%
-  mutate(DATETIME = ymd_hms(DateTime)-300) 
+
+# AQ_data_2015_PM10 <- AQ_data_2015_PM10 %>%
+#   dplyr::group_by(day) 
+# 
+# AQ_data_2015_PM10 <- AQ_data_2015_PM10 %>%
+#   dplyr::summarise(mean = mean(Value, na.rm=T))
+# 
+# AQ_data_2015_PM10 <- AQ_data_2015_PM10 %>%
+#   dplyr::summarise(mean = mean(mean, na.rm=T))
+# 
+# 
+# AQ_data_2015_PM25 <- AQ_data_2015_PM25 %>%
+#   mutate(DATETIME = ymd_hms(DateTime)-300) 
 
 
 # remove seconds
 AQ_data_2015_PM10$DATETIME <- trunc(AQ_data_2015_PM10$DATETIME, units = "mins")
 AQ_data_2015_PM10$DATETIME <- as.POSIXct(AQ_data_2015_PM10$DATETIME)
 str(AQ_data_2015_PM10)
+
+summary_stat <- AQ_data_2015_PM10 %>%
+  group_by(day) %>%
+  summarise(mean_PM10 = mean(Value, na.rm = TRUE))
 
 
 AQ_data_2015_PM25$DATETIME <- trunc(AQ_data_2015_PM25$DATETIME, units = "mins")
@@ -249,7 +264,7 @@ library(tidyr)
 library(splines)
 library(plyr)
 
-
+setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015")
 AQ_WRF_2015_PM10 <- read.csv("WRF_trial_runs/AQ_Data_WRF_2_April_2015_PM10.csv")
 # AQ_WRF_2015 <- read.csv("AQ_Data_WRF_2_April_2015_PM25.csv")
 
@@ -258,6 +273,12 @@ AQ_WRF_2015_PM10 <- AQ_WRF_2015_PM10 %>%
 
 # remove empty stations
 AQ_WRF_2015_PM10 <- na.omit(AQ_WRF_2015_PM10)
+
+
+AQ_WRF_2015_PM10_selected_Sites  <- AQ_WRF_2015_PM10 %>%
+  filter(Site %in% c("Khalifa City A", "Hamdan Street",
+                     "Liwa Oasis", "Khadeja Primary School",
+                     "Bida Zayed", "Mussafah"))
 
 ###################################################################################################################
 ######### plot TIME-SERIES of AQ PM10 data and WRF PM10 data ######################################################
@@ -287,6 +308,41 @@ plot
 
 par(oldpar)
 dev.off()
+
+
+###########################################################################3
+
+
+jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/AQ_PM10_vs_WRF_TimeSeries_selected.jpg',
+     quality = 100, bg = "white", res = 300, width = 18, height = 9, units = "in")
+par(mar=c(4, 10, 9, 2) + 0.3)
+oldpar <- par(las=1)
+
+
+plot <- ggplot(AQ_WRF_2015_PM10_selected_Sites, aes(DATETIME, Value)) + 
+  theme_bw() +
+  geom_line(aes(y = Value, col = "Value"), alpha=1, col="red", size = 1) +
+  geom_line(aes(y = WRF_CHEM, col = "WRF_CHEM"), alpha=1, col="blue", size =1) +
+  facet_wrap( ~ Site, ncol=2) +
+  theme(legend.position="none") + 
+  theme(strip.text = element_text(size = 30)) + 
+  ylab(expression(paste(PM[10], " (µg/",m^3, ")"))) + 
+  theme(axis.title.x=element_blank(),
+        axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=30, colour = "black", face="bold")) +
+  theme(axis.title.y = element_text(face="bold", colour="black", size=30),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=30, colour = "black")) +
+  ylim(0, 3000)  
+plot
+
+
+par(oldpar)
+dev.off()
+
+
+
+
+
+
 
 ###################################################################################################################
 ###################################################################################################################

@@ -14,6 +14,7 @@ library(raster)
 library(leaflet)
 library(htmlwidgets)
 library(webshot)
+library(ggplot2)
 
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER")
 # setwd("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER")
@@ -68,41 +69,82 @@ for (i in 1:length(filenames)) {
   AWS_data <- AWS_data %>%
     mutate(date = date(DateTime),
            hour = hour(DateTime),
+           minute = minute(DateTime),
            station = station)
+  
+
   
   
   # filter data between 29 March and 4 April 2015
+  # filter data only at minutes 00
   AWS_data <- AWS_data %>%
+    filter(minute == 0) %>%
     filter(date >= "2015-03-29" & date <= "2015-04-04")  
 
-   # make hourly average 
+
+   # # make hourly average 
+   # AWS_data <- AWS_data %>%
+   #  group_by(date,
+   #           hour,
+   #           station) %>%
+   #  dplyr::summarise(wind_direction = mean(Wind.Dir...., na.rm = TRUE),
+   #                   wind_speed = mean(Wind.Speed..m.s., na.rm = TRUE),
+   #                   RH = mean(RelHumidity...., na.rm = TRUE),
+   #                   Radiation = mean(Radiation.Global..Wh.m2., na.rm = TRUE),
+   #                   T_dry = mean(Temp.Dry...C., na.rm = TRUE),
+   #                   T_dew = mean(Temp.DewPoint...C., nam.rm = TRUE))
+   
+   
    AWS_data <- AWS_data %>%
-    group_by(date,
-             hour,
-             station) %>%
-    dplyr::summarise(wind_direction = mean(Wind.Dir...., na.rm = TRUE),
-                     wind_speed = mean(Wind.Speed..m.s., na.rm = TRUE),
-                     RH = mean(RelHumidity...., na.rm = TRUE),
-                     Radiation = mean(Radiation.Global..Wh.m2., na.rm = TRUE),
-                     T_dry = mean(Temp.Dry...C., na.rm = TRUE),
-                     T_dew = mean(Temp.DewPoint...C., nam.rm = TRUE))
+     group_by(date,
+              hour,
+              station) %>%
+     mutate(wind_direction = Wind.Dir....,
+            wind_speed = Wind.Speed..m.s., 
+            RH = RelHumidity....,
+            Radiation = Radiation.Global..Wh.m2.,
+            T_dry = Temp.Dry...C.,
+            T_dew = Temp.DewPoint...C.,
+            pressure = Press.QFF..hPa.,
+            DateTime = DateTime)
+   
+   AWS_data <- AWS_data %>%
+     dplyr::select(DateTime,
+                   date,
+                   hour,
+                   station,
+                   wind_direction,
+                   wind_speed,
+                   RH,
+                   Radiation,
+                   T_dry,
+                   T_dew,
+                   pressure)
+  
    
    All_AWS_data <- rbind(All_AWS_data, AWS_data)
    
 }
 
+# to calculate the average of wind speed and wind direction  
+# https://math.stackexchange.com/questions/44621/calculate-average-wind-direction
+
 write_csv(All_AWS_data, "dust_event_outputs/AWS_concatenated_DUST_2_April_2015.csv")
+
+
+
 
 #############################################################################################
 ##### create single files for each time stamp ###############################################
 #############################################################################################
 
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/")
-setwd("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs")
+# setwd("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs")
 All_AWS_data <- read_csv("AWS_concatenated_DUST_2_April_2015.csv")
+# All_AWS_data <- read_csv("AWS_concatenated_DUST_2_April_2015_AVG.csv")
 
 # rebuild DateTime variable
- All_AWS_data$DateTime <- paste0(All_AWS_data$date, " ", All_AWS_data$hour, "_00", " ", "UTC")
+All_AWS_data$DateTime <- paste0(All_AWS_data$date, " ", All_AWS_data$hour, "_00", " ", "UTC")
 
 
 # load coordinates of the monitoring stations:
@@ -119,12 +161,14 @@ All_AWS_data <- All_AWS_data %>%
 
 # list DateTime
 DateHour <- All_AWS_data[!duplicated(All_AWS_data[c("DateTime")]),]
-DateHour <- as.list(DateHour[,10])
+# DateHour <- as.list(DateHour[,10])
+DateHour <- as.list(DateHour[,1])
 DateHour <- unlist(DateHour)
 
 # list stations
 STATIONS_NAMES <- All_AWS_data[!duplicated(All_AWS_data[c("station")]),]
-STATIONS_NAMES <- as.list(STATIONS_NAMES[,3])
+# STATIONS_NAMES <- as.list(STATIONS_NAMES[,3])
+STATIONS_NAMES <- as.list(STATIONS_NAMES[,4])
 STATIONS_NAMES <- unlist(STATIONS_NAMES)
 
 # generate a time sequence for the WRF-Chem run at intervals of 1 hour (should be 168 images, 7 DAYS)
@@ -143,7 +187,7 @@ TS <- TS[1:168]
 # j <- 3
 
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data")
-setwd("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data")
+# setwd("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data")
 getwd()
 
 for (i in 1:length(DateHour)) {
@@ -156,6 +200,7 @@ for (i in 1:length(DateHour)) {
          filter(DateTime == DateHour[i],
                 station == as.character(STATIONS_NAMES[j]))
        hourly_AWS_data <- rbind(hourly_AWS_data, AAA)
+       hourly_AWS_data <- na.omit(hourly_AWS_data)
        write.csv(hourly_AWS_data, paste0(str_sub(name_time, start = 1, end = -10), "_",
                                          str_sub(name_time, start = 12, end = -7), "_",
                                          str_sub(name_time, start = 15, end = -4),
@@ -184,28 +229,13 @@ library(ncdf4)
 library(stringr)
 
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data")
-setwd("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data")
+# setwd("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data")
 
 path <- ".csv$"
 filenames_hourly_NCMS <- list.files(pattern = path)
 
 
-# order filenames by UTC time
-# filenames_hourly_NCMS <- c(filenames_hourly_NCMS[1:2],  filenames_hourly_NCMS[13],  filenames_hourly_NCMS[18:24], filenames_hourly_NCMS[3:12],  filenames_hourly_NCMS[14:17],
-#           # +24
-#            filenames_hourly_NCMS[25:26],filenames_hourly_NCMS[37],filenames_hourly_NCMS[42:48], filenames_hourly_NCMS[27:36], filenames_hourly_NCMS[38:41],
-#           # + 48
-#  filenames_hourly_NCMS[49:50],  filenames_hourly_NCMS[61],  filenames_hourly_NCMS[66:72], filenames_hourly_NCMS[51:60],  filenames_hourly_NCMS[62:65],
-#           # + 72
-#  filenames_hourly_NCMS[73:74],  filenames_hourly_NCMS[85],  filenames_hourly_NCMS[90:96], filenames_hourly_NCMS[75:84],  filenames_hourly_NCMS[86:89],
-#          # + 96
-#  filenames_hourly_NCMS[97:98],  filenames_hourly_NCMS[109],  filenames_hourly_NCMS[114:120], filenames_hourly_NCMS[99:108],  filenames_hourly_NCMS[110:113],
-#           # + 120
-#  filenames_hourly_NCMS[121:122],  filenames_hourly_NCMS[133],  filenames_hourly_NCMS[138:144], filenames_hourly_NCMS[123:132],  filenames_hourly_NCMS[134:137],
-#         # + 144
-#  filenames_hourly_NCMS[145:146],  filenames_hourly_NCMS[157],  filenames_hourly_NCMS[162:168], filenames_hourly_NCMS[147:156],  filenames_hourly_NCMS[158:161])
-
-# filenames_hourly_NCMS <- filenames_hourly_NCMS[2] 
+# filenames_hourly_NCMS <- filenames_hourly_NCMS[10] 
 
 ############################## 
 #### KRIGING function ########
@@ -252,20 +282,46 @@ filenames_hourly_NCMS <- list.files(pattern = path)
   
   ## make a variogram----------------------------------------------------------------
   
-  vargram_T_dry <- variogram(T_dry ~ 1, federico_AWS) # calculates sample variogram values for the dry temperature
-  nn <- floor(length(vargram_T_dry$gamma)/2)
-  var_for_fit<- mean(vargram_T_dry[nn:nrow(vargram_T_dry),3])
-  
-  
-  # fit the variogram
-  vargram_T_dry_fit  <- fit.variogram(vargram_T_dry, fit.ranges = FALSE, fit.sills = FALSE,
-                                    vgm(var_for_fit, "Sph"), fit.kappa = TRUE)
-  
+  # vargram_T_dry <- variogram(T_dry ~ 1, federico_AWS) # calculates sample variogram values for the dry temperature
+  # nn <- floor(length(vargram_T_dry$gamma)/2)
+  # var_for_fit<- mean(vargram_T_dry[nn:nrow(vargram_T_dry),3])
+  # 
+  # 
+  # # fit the variogram
+  # vargram_T_dry_fit  <- fit.variogram(vargram_T_dry, fit.ranges = FALSE, fit.sills = FALSE,
+  #                                   vgm(var_for_fit, "Sph"), fit.kappa = TRUE)
+  # 
+  # plot(vargram_T_dry)
+  # 
+  # plot(vargram_T_dry, vargram_T_dry_fit) # plot the sample values, along with the fit model
   
 
-  plot(vargram_T_dry, vargram_T_dry_fit) # plot the sample values, along with the fit model
-  
-  
+   # vargram_Radiation <- variogram(Radiation ~ 1, federico_AWS) # calculates sample variogram values for the dry temperature
+   # nn <- floor(length(vargram_Radiation$gamma)/2)
+   # var_for_fit<- mean(vargram_Radiation[nn:nrow(vargram_Radiation),3])
+   # 
+   # 
+   # # fit the variogram
+   # vargram_Radiation_fit  <- fit.variogram(vargram_Radiation, fit.ranges = FALSE, fit.sills = FALSE,
+   #                                     vgm(var_for_fit, "Sph"), fit.kappa = TRUE)
+   # 
+   # 
+   # plot(vargram_Radiation, vargram_Radiation_fit) # plot the sample values, along with the fit model
+   
+   
+   vargram_WS <- variogram(wind_speed ~ 1, federico_AWS) # calculates sample variogram values for the dry temperature
+   nn <- floor(length(vargram_WS$gamma)/2)
+   var_for_fit<- mean(vargram_WS[nn:nrow(vargram_WS),3])
+   
+   
+   # fit the variogram
+   vargram_WS_fit  <- fit.variogram(vargram_WS, fit.ranges = FALSE, fit.sills = FALSE,
+                                           vgm(var_for_fit, "Sph"), fit.kappa = TRUE)
+   
+   
+   plot(vargram_WS, vargram_WS_fit) # plot the sample values, along with the fit model
+   
+   
   # make a regular empty grid
   x.range <- as.numeric(c(floor(limit_x_y[1]-1),ceiling(limit_x_y[2]+1)))  # min/max longitude of the interpolation area
   y.range <- as.numeric(c(floor(limit_x_y[3]-1),ceiling(limit_x_y[4]+1)))  # min/max latitude of the interpolation area
@@ -283,19 +339,21 @@ filenames_hourly_NCMS <- list.files(pattern = path)
   
   # f.1 <- as.formula(Precip_in ~ X + Y)
   # perform kriging
-    dat.krg <- gstat::krige(T_dry ~ 1, federico_AWS, grd, vargram_T_dry_fit, nmax = 50)
-  
+  #  dat.krg <- gstat::krige(T_dry ~ 1, federico_AWS, grd, vargram_T_dry_fit, nmax = 50)
+  #  dat.krg <- gstat::krige(Radiation ~ 1, federico_AWS, grd, vargram_Radiation_fit, nmax = 50)
+  dat.krg <- gstat::krige(wind_speed ~ 1, federico_AWS, grd, vargram_WS_fit, nmax = 50)
 
-  
   r <- raster(dat.krg)
   plot(shp_UAE, add=TRUE, lwd=1)
   projection(r) <- CRS("+proj=longlat +datum=WGS84")
   
   r <- crop(r, extent(shp_UAE))
   r <- mask(r, shp_UAE)
+  # transform Wh/m2 into kW/m2
+  # r <- r*3.6 
   plot(r)
   
-  # stack rsters in the loop----
+  # stack rasters in the loop----
   all_rasters <- stack(all_rasters,r)
  
   }
@@ -318,18 +376,13 @@ filenames_hourly_NCMS <- list.files(pattern = path)
     ras_stack<- stack(ras_stack,ras)
   }
 
-writeRaster(ras_stack, paste0("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data/rasters/Dry_Temperature_NCMS_1km.tif"), overwrite = TRUE)
-
+# writeRaster(ras_stack, paste0("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data/rasters/Dry_Temperature_NCMS_1km_new.tif"), overwrite = TRUE)
+# writeRaster(ras_stack, paste0("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data/rasters/Irradiation_W_m2_NCMS_1km.tif"), overwrite = TRUE)
+writeRaster(ras_stack, paste0("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data/rasters/Wind_Speed_NCMS_1km.tif"), overwrite = TRUE)
 
 
 #################################################################################
 ##### MAPPING ###################################################################
-#################################################################################
-#################################################################################
-#################################################################################
-#################################################################################
-#################################################################################
-#################################################################################
 #################################################################################
 #################################################################################
 #################################################################################
@@ -338,39 +391,95 @@ writeRaster(ras_stack, paste0("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_even
 #################################################################################
 
 setwd("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data")
+setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data")
 path <- ".csv$"
 filenames_hourly_NCMS <- list.files(pattern = path)
 
 setwd("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data/rasters")
-NCMS_DRY_TEMP_STACK_image <- stack("Dry_Temperature_NCMS_10km.tif")
+setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data/rasters")
 
-plot(NCMS_DRY_TEMP_STACK_image[[34]])
+# temperature
+# NCMS_DRY_TEMP_STACK_image <- stack("Dry_Temperature_NCMS_1km_new.tif")
 
-# i <- 1
-# j <- 1
 
-for (i in 1:length(NCMS_DRY_TEMP_STACK_image@layers)) {
+# radiation
+NCMS_DRY_TEMP_STACK_image <- stack("Irradiation_W_m2_NCMS_1km.tif")/3.6
+NCMS_DRY_TEMP_STACK_image[NCMS_DRY_TEMP_STACK_image < 0] <- 0
+
+# wind speed
+# NCMS_DRY_TEMP_STACK_image <- stack("Wind_Speed_NCMS_1km.tif")
+
+
+# plot(NCMS_DRY_TEMP_STACK_image[[34]])
+
+# i <- 83
+# j <- 83
+
+# min_val <- 9.256
+# max_val <- 44
+
+vec_all <- as.vector(NCMS_DRY_TEMP_STACK_image)
+
+max_val<- ceiling(max(vec_all, na.rm = T))
+min_val<- floor(min(vec_all,  na.rm = T))
+
+
+stat_dat <- summary(vec_all)
+IQR <- floor(as.numeric((stat_dat[5]-stat_dat[2])* 1.5))# n is the space after IQR
+
+low_IQR <-floor(as.numeric((stat_dat[2]- IQR)))
+high_IQR <-floor(as.numeric((stat_dat[5]+IQR)))
+
+
+vec_all_1 <- vec_all[ vec_all >= low_IQR & vec_all <= high_IQR & !is.na(vec_all) ]
+
+xxx<- pretty( vec_all_1, n=15)
+
+{
+if (max_val <= max(xxx)){
+xxx<- unique(c( xxx))
+}else{
+xxx<- unique(c( xxx, max_val))
+}
+
+if (min_val >= min(xxx)){
+  xxx<- unique(c( xxx))
+}else{
+  xxx<- unique(c(min_val, xxx))
+}
+}
+
+
+
+cool = rainbow(50, start=rgb2hsv(col2rgb('cyan'))[1], end=rgb2hsv(col2rgb('blue'))[1])
+warm = rainbow(50, start=rgb2hsv(col2rgb('red'))[1], end=rgb2hsv(col2rgb('yellow'))[1])
+cols = c(rev(cool), rev(warm))
+mypalette <- colorRampPalette(cols)(255)
+
+pal = colorBin(mypalette, bin = xxx, domain = min_val:max_val, na.color = "transparent")
+
+
+
+for (i in 1:length(filenames_hourly_NCMS)) {
   # load the stacked raster with all the images
-  NCMS_STACK_image <- raster("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data/rasters/Dry_Temperature_NCMS_10km.tif", band = i)
-  plot(NCMS_STACK_image)
+  # NCMS_STACK_image <- raster("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data/rasters/Dry_Temperature_NCMS_1km.tif", band = i)
+  # NCMS_STACK_image <- raster("D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/hourly_data/rasters/Irradiation_W_m2_NCMS_1km.tif", band = i)/3.6
+    NCMS_STACK_image <-  NCMS_DRY_TEMP_STACK_image[[i]]
+    plot(NCMS_STACK_image)
   
 
   name_time <- str_sub(filenames_hourly_NCMS[i], start = 1, end = -5)
   
-  min_temp <- 10
-  max_temp <- 42
+  tag_time <- paste0(str_sub(name_time, start = 1, end = -7), " ",
+              str_sub(name_time, start = 12, end = -4), ":",
+               str_sub(name_time, start = 15, end = -1))
   
-  cool = rainbow(50, start=rgb2hsv(col2rgb('cyan'))[1], end=rgb2hsv(col2rgb('blue'))[1])
-  warm = rainbow(50, start=rgb2hsv(col2rgb('red'))[1], end=rgb2hsv(col2rgb('yellow'))[1])
-  cols = c(rev(cool), rev(warm))
-  mypalette <- colorRampPalette(cols)(255)
   
-  pal = colorBin(mypalette, domain = 10:42, bins = 11, na.color = "transparent")
-
+ 
   
   # define popup for time scene
   "h1 { font-size: 3px;}"
-  content <- paste('<h1><strong>', name_time,'', sep = "")
+  content <- paste('<h1><strong>', tag_time,'', sep = "")
   
   map <- leaflet() %>% 
     addTiles() %>% 
@@ -379,18 +488,19 @@ for (i in 1:length(NCMS_DRY_TEMP_STACK_image@layers)) {
     addProviderTiles("Esri.WorldImagery", group = "Satellite") %>%
     addProviderTiles("Stamen.TonerLite", group = "Toner Lite") %>%
     
-    addPopups(53, 25, content,
+    addPopups(54, 25, content,
               options = popupOptions(closeButton = FALSE)) %>%
     
     addRasterImage(NCMS_STACK_image, 
                    colors = pal, 
                    opacity = 0.5, group = "Dry_Temp_NCMS") %>%
     addLayersControl(
-      baseGroups = c("Road map", "Toner Lite","Satellite"),
+      baseGroups = c("Toner Lite" ,"Road map" ,"Satellite"),
       overlayGroups = "Dry_Temp_NCMS",
       options = layersControlOptions(collapsed = TRUE)) %>%
-    addLegend("bottomright", pal = pal, values = c(min_temp, max_temp),
-              title = "<br><strong> Dry Temperature (C): </strong>",
+    addLegend("bottomright", pal = pal, values = c(min_val, max_val),
+            #  title = "<br><strong>Dry Temp.(<sup>°</sup>C): </strong>",
+              title = "<br><strong>W/m<sup>2</sup> : </strong>",
               labFormat = labelFormat(prefix = ""),
               opacity = 0.5)
   map
@@ -405,7 +515,11 @@ for (i in 1:length(NCMS_DRY_TEMP_STACK_image@layers)) {
 # to make a movie.......
 # to use with ImageMagik using the commnad line cmd in windows
 # cd into the directory where there are the png files
-# magick -delay 50 -loop 0 *.png Dry_Temperatue_NCMS_10km_DUST_event_02_April_2015.gif
-
+# magick -delay 50 -loop 0 *.png Dry_Temperatue_NCMS_1km_DUST_event_02_April_2015.gif
+# magick -delay 50 -loop 0 *.png Irradiance_NCMS_1km_DUST_event_02_April_2015.gif
+# magick -delay 50 -loop 0 *.png Wind_Speed_NCMS_1km_DUST_event_02_April_2015.gif
   
+
+
+
 

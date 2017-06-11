@@ -3,10 +3,14 @@
 library(magick)
 library(stringr)
 
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150401")
 # setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150401")
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150402")
 # setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150402")
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150403")
 # setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150403")
-setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150404")
+setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150404")
+# setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150404")
 
 
 # add time stamp to RGB images
@@ -59,29 +63,39 @@ library(stringr)
 # read images separately
 
 # i <- 2
-
-setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150401")
+ setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150401")
+# setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150401")
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150402")
 # setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150402")
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150403")
 # setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150403")
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150404")
 # setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150404")
 patt <- ".jpg"
 filenames_RGB <- list.files(pattern = patt)
 
 for (i in 1: length(filenames_RGB)) {
 
- setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150401")
+ setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150401")
+# setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150401")
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150402")
 # setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150402")
+#  setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150403")
 # setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150403")
-# setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150404")
+#  setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150403")
+# setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/RGB_images/20150403")
   patt <- ".jpg"
 filenames_RGB <- list.files(pattern = patt)
 RGB <- image_read(filenames_RGB[i])
 plot(RGB)
 
-
-setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/images_png/20150401_selected_dust")
+setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/images_png/20150401_selected_dust")
+# setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/images_png/20150401_selected_dust")
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/images_png/20150402_selected_dust")
 # setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/images_png/20150402_selected_dust")
+ setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/images_png/20150403_selected_dust")
 # setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/images_png/20150403_selected_dust")
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/images_png/20150404_selected_dust")
 # setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/images_png/20150404_selected_dust")
 
 patt <- ".png"
@@ -99,7 +113,8 @@ left_to_right <- image_append(image_scale(img, "x600"))
 plot(left_to_right)
 
 
-setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/combined_DUST_Mask_and_RGB")
+# setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/I_method/combined_DUST_Mask_and_RGB")
+setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/combined_DUST_Mask_and_RGB")
 
 
 name <- str_sub(filenames_DUST[i], start = 1, end = -5)
@@ -117,7 +132,9 @@ image_write(left_to_right, path = paste(name, "_combined_RGB_DUST",".jpg", sep =
 ###########################################################################
 ###########################################################################
 ###########################################################################
-
+###########################################################################
+###########################################################################
+###########################################################################
 
 
 

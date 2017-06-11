@@ -260,6 +260,7 @@ res(z)
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/")
 
 # spatial correlations of all the layers (first 12 layes are from WRF, the second 12 layers are from MODIS)
+# Pearson correlation between WRF-Chem and MODIS
 r <- calc(z, fun=function(x) cor(x[1:12], x[13:24], method='pearson', use= "pairwise.complete.obs"))
 plot(r)
 # r <- calc(z, fun=function(x) cor(x[1:3], x[4:6], use= "pairwise.complete.obs"))
@@ -268,7 +269,13 @@ plot(r)
 # overlay shape of UAE border
 plot(shp_UAE, add=TRUE, lwd=1)
 
+# make difference between WRF-Chem and WRF on 2 April 2015
+diff_WRF_MODIS_TERRA <- all_rasters_WRF[[5]] - all_rasters_MODIS[[5]]    # 10:30 am
+diff_WRF_MODIS_AQUA <- all_rasters_WRF[[11]] - all_rasters_MODIS[[11]]   # 13:30 pm
 
+
+plot(diff_WRF_MODIS_TERRA)
+plot(diff_WRF_MODIS_AQUA)
 
 
 jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/hist_MAIC_WRF.jpg',   
@@ -356,45 +363,84 @@ plot(r)
 
 
 
+#### import the Arabian Peninsusula domain #############
+
+dir_ME <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
+### shapefile for WRF_domain
+shp_ME <- readOGR(dsn = dir_ME, layer = "ADMIN_domain_d01_WRFChem")
+
+shp_ME@data$name <- 1:nrow(shp_ME)
+plot(shp_ME)
+
+########################################################
+
 MIN_PAL <- -1
 MAX_PAL <- +1
 
-# pal <- colorNumeric(c("#9999FF", "#FFFF00", "#FF0000", "#ff8000"),
-#                     c(MIN_PAL, MAX_PAL),na.color = "transparent")
 
-
-pal <- colorNumeric(c("#0000ff", "#ffffff", "#ff0000"),
+pal_corr <- colorNumeric(c("#0000ff", "#ffffff", "#ff0000"),
                     c(MIN_PAL, MAX_PAL), na.color = "#ffff00")
 
 
+min <- 0
+max <- 1700
 
-map <- leaflet() %>%
-  setView(46, 26, 6) %>%
+pal <- colorNumeric(c("#9999FF", "#FFFF00", "#FF0000", "#ff8000"),
+                     c(min, max),na.color = "transparent")
+
+
+map <- leaflet(shp_ME) %>%
+#  setView(46, 26, 6) %>%
   addTiles(group = "OSM (default)") %>%
   addProviderTiles("OpenStreetMap.Mapnik", group = "Road map") %>%
   addProviderTiles("Esri.WorldImagery", group = "Satellite") %>%
   addProviderTiles("Stamen.TonerLite", group = "Toner Lite") %>%
   
-  addRasterImage(r, colors = pal, opacity = 0.4,
+  addRasterImage(r, colors = pal_corr, opacity = 0.4,
                  group = "correlation", maxBytes = 32 * 1024 * 1024) %>%
+  
+  addRasterImage(diff_WRF_MODIS_TERRA, colors = pal, opacity = 0.7,
+                 group = "diff_WRF_MODIS_TERRA", maxBytes = 32 * 1024 * 1024) %>%
+  
+  addRasterImage(diff_WRF_MODIS_AQUA, colors = pal, opacity = 0.7,
+                 group = "diff_WRF_MODIS_AQUA", maxBytes = 32 * 1024 * 1024) %>%
+  
+  addPolygons(stroke = TRUE, smoothFactor = 1, fillOpacity = 0,
+              weight = 2.5, color = "#000000",
+              group = "ME") %>%
  
-  addLegend("bottomright", pal = pal, values = c(MIN_PAL, MAX_PAL), 
-            title = "<br><strong>R MAIAC-WRFChem: </strong>",
+  # addLegend("bottomright", pal = pal_corr, values = c(MIN_PAL, MAX_PAL),
+  #           title = "<br><strong>r MAIAC-WRFChem: </strong>",
+  #           labFormat = labelFormat(prefix = ""),
+  #           opacity = 0.4) %>%
+  
+  addLegend("bottomright", pal = pal, values = c(min, max),
+            title = "<br><strong><font face=symbol>D</font>PM<sub>10</sub> (<font face=symbol>m</font>g/m<sup>3</sup>)</strong>",
             labFormat = labelFormat(prefix = ""),
-            opacity = 0.4) %>%
+            opacity = 0.7) %>%
   
   addLayersControl(
     baseGroups = c("Toner Lite", "Road map", "Satellite"),
-    overlayGroups = c("correlation"),
-    options = layersControlOptions(collapsed = TRUE))
-#  hideGroup(c("March_29_2015")) 
+    overlayGroups = c("correlation", "diff_WRF_MODIS_TERRA", "diff_WRF_MODIS_AQUA"),
+    options = layersControlOptions(collapsed = TRUE)) %>%
+  hideGroup(c("correlation", "diff_WRF_MODIS_AQUA"))  #"diff_WRF_MODIS_TERRA"
 
 map
 
 
-saveWidget(map, paste0("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/correlation_WRF_MODIS_MAIAC.html"), selfcontained = FALSE)
-webshot("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/correlation_WRF_MODIS_MAIAC.html",
-        file = "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/correlation_WRF_MODIS_MAIAC.jpg", vwidth = 1100, vheight = 1100,
+# saveWidget(map, paste0("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/correlation_WRF_MODIS_MAIAC.html"), selfcontained = FALSE)
+# webshot("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/correlation_WRF_MODIS_MAIAC.html",
+#         file = "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/correlation_WRF_MODIS_MAIAC.jpg", vwidth = 900, vheight = 900,
+#         cliprect = 'viewport')
+
+
+saveWidget(map, paste0("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/diff_WRF_TERRA_MAIAC.html"), selfcontained = FALSE)
+webshot("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/diff_WRF_TERRA_MAIAC.html",
+        file = "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/diff_WRF_TERRA_MAIAC.jpg", vwidth = 900, vheight = 900,
         cliprect = 'viewport')
 
 
+saveWidget(map, paste0("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/diff_WRF_AQUA_MAIAC.html"), selfcontained = FALSE)
+webshot("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/diff_WRF_AQUA_MAIAC.html",
+        file = "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/diff_WRF_AQUA_MAIAC.jpg", vwidth = 900, vheight = 900,
+        cliprect = 'viewport')

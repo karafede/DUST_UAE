@@ -73,6 +73,7 @@ AQ_data_2015_PM10_DAYS <- AQ_data_2015_PM10 %>%
 
 # select unique sites of the AQ data
 sites_stations_PM10 <- AQ_data_2015_PM10[row.names(unique(AQ_data_2015_PM10[,c("Site", "Latitude", "Longitude")])),]
+write_csv(sites_stations_PM10, "sites_PM10.csv")
 
 
 ##############################################################################
@@ -287,14 +288,87 @@ library(tidyr)
 library(splines)
 library(plyr)
 
-# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MODIS_10km/AVG_TERRA_AQUA")
-setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km")
 
-# AQ_MODIS_2015_PM10_DAYS <- read.csv("AQ_MODIS_2_April_2015_PM10.csv")
-AQ_MODIS_2015_PM10_DAYS <- read.csv("AQ_MAIAC_2_April_2015_PM10.csv")
+dir_TERRA <- ("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA")
+dir_AQUA <- ("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA")
+
+
+AQ_TERRA_2015_PM10_DAYS <- read.csv(paste0(dir_TERRA,"/AQ_MAIAC_TERRA_2_April_2015_PM10.csv"))
+AQ_AQUA_2015_PM10_DAYS <- read.csv(paste0(dir_AQUA,"/AQ_MAIAC_AQUA_2_April_2015_PM10.csv"))
+
+AQ_MODIS_long <- rbind(AQ_TERRA_2015_PM10_DAYS,
+                       AQ_AQUA_2015_PM10_DAYS)
+
+colnames(AQ_TERRA_2015_PM10_DAYS)[colnames(AQ_TERRA_2015_PM10_DAYS) == 'MODIS'] <- 'MODIS_TERRA'
+colnames(AQ_AQUA_2015_PM10_DAYS)[colnames(AQ_AQUA_2015_PM10_DAYS) == 'MODIS'] <- 'MODIS_AQUA'
+colnames(AQ_TERRA_2015_PM10_DAYS)[colnames(AQ_TERRA_2015_PM10_DAYS) == 'mean_value'] <- 'mean_value_TERRA'
+colnames(AQ_AQUA_2015_PM10_DAYS)[colnames(AQ_AQUA_2015_PM10_DAYS) == 'mean_value'] <- 'mean_value_AQUA'
 
 # omit empty lines
-AQ_MODIS_2015_PM10_DAYS <- na.omit(AQ_MODIS_2015_PM10_DAYS)
+AQ_TERRA_2015_PM10_DAYS <- na.omit(AQ_TERRA_2015_PM10_DAYS)
+AQ_AQUA_2015_PM10_DAYS <- na.omit(AQ_AQUA_2015_PM10_DAYS)
+
+str(AQ_TERRA_2015_PM10_DAYS)
+
+AQ_TERRA_2015_PM10_DAYS <- AQ_TERRA_2015_PM10_DAYS %>%
+  mutate(DATETIME = ymd_hms(DATETIME))
+
+AQ_AQUA_2015_PM10_DAYS <- AQ_AQUA_2015_PM10_DAYS %>%
+  mutate(DATETIME = ymd_hms(DATETIME))
+
+AQ_TERRA_2015_PM10_DAYS <- AQ_TERRA_2015_PM10_DAYS %>%
+  mutate(day = ymd(day))
+
+AQ_AQUA_2015_PM10_DAYS <- AQ_AQUA_2015_PM10_DAYS %>%
+  mutate(day = ymd(day))
+
+
+## bind MODIS TERRA & AQUA together ####
+
+AQ_MODIS <- cbind(AQ_TERRA_2015_PM10_DAYS,
+                  AQ_AQUA_2015_PM10_DAYS)
+
+
+
+str(AQ_MODIS)
+
+###################################################################################################################
+######### plot TIME-SERIES of AQ data data and MODIS TERRA data ###################################################
+###################################################################################################################
+
+jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQ_MAIC_TERRA_AQUA_TimeSeries.jpg',
+     quality = 100, bg = "white", res = 300, width = 18, height = 9, units = "in")
+par(mar=c(4, 10, 9, 2) + 0.3)
+oldpar <- par(las=1)
+
+
+plot <- ggplot(AQ_MODIS, aes(DATETIME, mean_value_TERRA)) + 
+  theme_bw() +
+  geom_line(aes(y = mean_value_TERRA, col = "mean_value_TERRA"),linetype = "dashed", col="red") +
+  geom_line(aes(y = mean_value_AQUA, col = "mean_value_AQUA"),linetype = "dashed",  col="blue") +
+  geom_line(aes(y = MODIS_TERRA, col = "MODIS_TERRA"), col="red") +
+  geom_line(aes(y = MODIS_AQUA, col = "MODIS_AQUA"), col="blue") +
+  facet_wrap( ~ Site, ncol=4) +
+  theme(legend.position="none") + 
+  theme(strip.text = element_text(size = 10)) + 
+  ylab(expression(paste(PM[10], " (µg/",m^3, ")"), size = 10)) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=12, colour = "black", face="bold")) +
+  theme(axis.title.y = element_text(face="bold", colour="black", size=13),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=10, colour = "black")) +
+  ylim(0, 2500)  
+plot
+
+
+par(oldpar)
+dev.off()
+
+
+
+
+
+
+
 
 
 ### measurements data
@@ -304,8 +378,11 @@ jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/PM10_
 par(mar=c(4, 10, 9, 2) + 0.3)
 oldpar <- par(las=1)
 
+# omit empty lines
+AQ_MODIS_long <- na.omit(AQ_MODIS_long)
+
 # check your data  PM10 measurements ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-plot <- ggplot(AQ_MODIS_2015_PM10_DAYS, aes(Site, mean_value)) +
+plot <- ggplot(AQ_MODIS_long, aes(Site, mean_value)) +
   theme_bw() +
   geom_boxplot() + 
   theme(axis.title.x=element_blank(),
@@ -322,8 +399,6 @@ dev.off()
 
 
 
-
-
 # MODIS-MAIAC data
 
 
@@ -333,9 +408,10 @@ par(mar=c(4, 10, 9, 2) + 0.3)
 oldpar <- par(las=1)
 
 
-plot <- ggplot(AQ_MODIS_2015_PM10_DAYS, aes(Site, MODIS)) +
+plot <- ggplot(AQ_MODIS_long, aes(Site, MODIS)) +
   theme_bw() +
   geom_boxplot() + 
+  ylim(c(0, 2500)) +
   theme(axis.title.x=element_blank(),
         axis.text.x  = element_text(angle=90, vjust=0.5, hjust = 1, size=12, colour = "black", face="bold")) +
   ylab(expression(paste(PM[10], " (µg/",m^3, ")  MODIS-MAIAC"),size=20)) + 
@@ -350,11 +426,13 @@ dev.off()
 
 
 
- AQ_MODIS_2015_PM10_DAYS <- AQ_MODIS_2015_PM10_DAYS %>%
- #  filter(mean_value < 2500) %>%  #check background value (this value has been estimated from the above boxplot)
-   filter(mean_value > 0) %>%
-   filter(MODIS > 0) 
-  #  filter(MODIS < 1100)
+AQ_MODIS_long <- AQ_MODIS_long %>%
+  #  filter(mean_value < 2500) %>%  #check background value (this value has been estimated from the above boxplot)
+  filter(mean_value > 0) %>%
+  filter(MODIS > 0) 
+#  filter(MODIS < 1100)
+
+str(AQ_MODIS_long)
 
 
 #### fit function and label for PM AQ and WRF-CHEM data  ########################
@@ -383,12 +461,13 @@ dev.off()
 #### this funtion FORCE regression to pass through the origin #######################
 
 lm_eqn <- function(df){
-  m <- lm(MODIS ~ -1 + mean_value, df);
+  m <- lm(mean_value ~ -1 + MODIS, df);
   eq <- substitute(italic(y) == b %.% italic(x)*","~~italic(r)^2~"="~r2,
                    list(b = format(coef(m)[1], digits = 2),
                         r2 = format(summary(m)$r.squared, digits = 3)))
   as.character(as.expression(eq));
 }
+
 
 
 ################### PM10 versus PM10 MODIS #############################
@@ -405,11 +484,11 @@ oldpar <- par(las=1)
 
 
 # define regression equation for each season
-eq_PM10 <- ddply(AQ_MODIS_2015_PM10_DAYS, .(Site),lm_eqn)
+eq_PM10 <- ddply(AQ_MODIS_long, .(Site),lm_eqn)
 
 
 # ggplot(PM25_AOD, aes(x=Val_AOD, y=Val_PM25, color = season)) +
-ggplot(AQ_MODIS_2015_PM10_DAYS, aes(x=MODIS, y=mean_value)) +
+ggplot(AQ_MODIS_long, aes(x=MODIS, y=mean_value)) +
   theme_bw() +
  # geom_jitter(colour=alpha("black",0.15)) +
  geom_point(size = 2, color='black') +    # Use hollow circles
