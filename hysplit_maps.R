@@ -81,7 +81,7 @@ map
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/hysplit")
 
 saveWidget(map, 'temp.html', selfcontained = FALSE)
-webshot('temp.html', file = "Abu_Dhabi_1500m_2April_2015.png", vwidth = 900, vheight = 900,
+webshot('temp.html', file = "Abu_Dhabi_500m_2April_2015.png", vwidth = 900, vheight = 900,
         cliprect = 'viewport')
 
 #########################################################################################

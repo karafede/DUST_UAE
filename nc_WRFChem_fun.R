@@ -8,6 +8,7 @@ library(stringr)
 
 # list .nc files
 setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs")
+setwd("E:/MASDAR_FK/Air Quality/Phase 2/WRF_Chem/DUST_ADO_FK")
 patt<- ".nc"
 filenames <- list.files(pattern = patt)
 filenames <- filenames

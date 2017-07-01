@@ -12,8 +12,8 @@ library(raster)
 library(leaflet)
 library(htmlwidgets)
 
-# setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs")
-setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs")
+ setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs")
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs")
 
 # get extent from WRFChem output-----------------------------------------------
 # use the raster stack with all the WRF_chem output
@@ -55,13 +55,18 @@ plot(shp_UAE)
 
 #### importing the domain shapefile to use as a masking 
 dir <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
-shp_WRF <- readOGR(dsn = dir, layer = "domain_d01_WRFChem")
+dir <- "D:/Dust_Event_UAE_2015/WRFChem_domain"
 
+# larger WRF domain
+shp_WRF_L <- readOGR(dsn = dir, layer = "domain_d01_WRFChem")
+plot(shp_WRF_L)
+# small WRF domain
+shp_WRF <- readOGR(dsn = dir, layer = "ADMIN_domain_d01_WRFChem_small")
+shp_WRF <- spTransform(shp_WRF, CRS("+init=epsg:4326"))
 
-shp_WRF@data$name <- 1:nrow(shp_WRF)
-plot(shp_WRF)
+plot(shp_WRF_L)
 plot(shp_UAE, add=TRUE, lwd=1)
-
+plot(shp_WRF, add=TRUE, lwd=1)
 
 
 #####################################################################################################################
@@ -308,6 +313,7 @@ for (i in 1:length(DAYS_TERRA)) {
 #### reload data and crop images #################################################
 
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA")
+setwd("D:/Dust_Event_UAE_2015/MAIAC_1km/AQUA")
 
 # create new extent to crop the rasters #######################################################
 new_extent_MAIAC <- extent(c(40,62,11,32))
@@ -323,8 +329,10 @@ shapefile(new_extent_MAIAC, 'Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_U
 
 # AQUA ####-------------------------------------------------------------------------
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA")
+setwd("D:/Dust_Event_UAE_2015/MAIAC_1km/AQUA")
 filenames <- list.files(pattern = "_AQUA.tif$")
 dir_out <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA"
+dir_out <- "D:/Dust_Event_UAE_2015/MAIAC_1km/AQUA"
 
 # i <- 3 
 
@@ -347,15 +355,17 @@ for (i in 1:length(filenames)) {
   # plot(shp_WRF,add=TRUE, lwd=1)
   # plot(shp_UAE, add=TRUE, lwd=1)
   
-  writeRaster(r, paste0(dir_out,"/", date,"_Aqua_MAIAC_crop.tif"), overwrite = TRUE) 
+  writeRaster(r, paste0(dir_out,"/", date,"_Aqua_MAIAC_crop_small.tif"), overwrite = TRUE) 
 }
 
 
 
 # TERRA ####-------------------------------------------------------------------------
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA")
+setwd("D:/Dust_Event_UAE_2015/MAIAC_1km/TERRA")
 filenames <- list.files(pattern = "_TERRA.tif$")
 dir_out <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA"
+dir_out <- "D:/Dust_Event_UAE_2015/MAIAC_1km/TERRA"
 
 # i <- 3 
 
@@ -376,7 +386,7 @@ for (i in 1:length(filenames)) {
   # plot(shp_WRF,add=TRUE, lwd=1)
   # plot(shp_UAE, add=TRUE, lwd=1)
   
-  writeRaster(r, paste0(dir_out,"/", date,"_Terra_MAIAC_crop.tif"), overwrite = TRUE) 
+  writeRaster(r, paste0(dir_out,"/", date,"_Terra_MAIAC_crop_small.tif"), overwrite = TRUE) 
 }
 
 ##############################################################################################################################
@@ -391,12 +401,19 @@ for (i in 1:length(filenames)) {
 dir_AQUA <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA/"
 
 # multiply raster by conversion factor from AOD to PM10
-  March_29 <- raster(paste0(dir_AQUA, "88_Aqua_MAIAC_crop.tif"))*294
-  March_30 <- raster(paste0(dir_AQUA, "89_Aqua_MAIAC_crop.tif"))*294
-  March_31 <- raster(paste0(dir_AQUA, "90_Aqua_MAIAC_crop.tif"))*294
-  April_01 <- raster(paste0(dir_AQUA, "91_Aqua_MAIAC_crop.tif"))*294
-  April_02 <- raster(paste0(dir_AQUA, "92_Aqua_MAIAC_crop.tif"))*294
-  April_03 <- raster(paste0(dir_AQUA, "93_Aqua_MAIAC_crop.tif"))*294
+  # March_29 <- raster(paste0(dir_AQUA, "88_Aqua_MAIAC_crop.tif"))*294
+  # March_30 <- raster(paste0(dir_AQUA, "89_Aqua_MAIAC_crop.tif"))*294
+  # March_31 <- raster(paste0(dir_AQUA, "90_Aqua_MAIAC_crop.tif"))*294
+  # April_01 <- raster(paste0(dir_AQUA, "91_Aqua_MAIAC_crop.tif"))*294
+  # April_02 <- raster(paste0(dir_AQUA, "92_Aqua_MAIAC_crop.tif"))*294
+  # April_03 <- raster(paste0(dir_AQUA, "93_Aqua_MAIAC_crop.tif"))*294
+  
+  March_29 <- raster(paste0(dir_AQUA, "88_Aqua_MAIAC_crop.tif"))
+  March_30 <- raster(paste0(dir_AQUA, "89_Aqua_MAIAC_crop.tif"))
+  March_31 <- raster(paste0(dir_AQUA, "90_Aqua_MAIAC_crop.tif"))
+  April_01 <- raster(paste0(dir_AQUA, "91_Aqua_MAIAC_crop.tif"))
+  April_02 <- raster(paste0(dir_AQUA, "92_Aqua_MAIAC_crop.tif"))
+  April_03 <- raster(paste0(dir_AQUA, "93_Aqua_MAIAC_crop.tif"))
   
   plot(March_29)
   plot(March_30)
@@ -414,7 +431,8 @@ dir_AQUA <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1k
   
   # AQUA ##-------------------------------------------------------------------------
   setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA")
-  patt<- "_MAIAC_crop.tif$"
+  setwd("D:/Dust_Event_UAE_2015/MAIAC_1km/AQUA")
+  patt<- "_MAIAC_crop_small.tif$"
   filenames <- list.files(pattern = patt)
   all_rasters <- stack()    # inizialise the raster stack
   
@@ -438,7 +456,7 @@ dir_AQUA <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1k
   
   
   # save the raster stack with all the MAIAC data at 1km resolution
-  writeRaster(all_rasters, "AQUA_MAIAC_DUST_event_02_April_2015.tif" , options= "INTERLEAVE=BAND", overwrite=T)
+  writeRaster(all_rasters, "AQUA_MAIAC_DUST_event_02_April_2015_small.tif" , options= "INTERLEAVE=BAND", overwrite=T)
   
   # find min and max values of the stack raster
   max(all_rasters)
@@ -452,7 +470,8 @@ dir_AQUA <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1k
   
   # TERRA ##-------------------------------------------------------------------------
   setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA")
-  patt<- "_MAIAC_crop.tif$"
+  setwd("D:/Dust_Event_UAE_2015/MAIAC_1km/TERRA")
+  patt<- "_MAIAC_crop_small.tif$"
   filenames <- list.files(pattern = patt)
   all_rasters <- stack()    # inizialise the raster stack
   
@@ -476,7 +495,7 @@ dir_AQUA <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1k
   
   
   # save the raster stack with all the MAIAC data at 1km resolution
-  writeRaster(all_rasters, "TERRA_MAIAC_DUST_event_02_April_2015.tif" , options= "INTERLEAVE=BAND", overwrite=T)
+  writeRaster(all_rasters, "TERRA_MAIAC_DUST_event_02_April_2015_small.tif" , options= "INTERLEAVE=BAND", overwrite=T)
   
   # find min and max values of the stack raster
   max(all_rasters)
@@ -516,10 +535,14 @@ library(RColorBrewer)
 library(raster)
 library(classInt)
 library(stringr)
+  
+library(viridis)
+library(lattice)
 
 #### import the Arabian Peninsusula domain #############
 
 dir_ME <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
+dir_ME <- "D:/Dust_Event_UAE_2015/WRFChem_domain"
 ### shapefile for WRF_domain
 shp_ME <- readOGR(dsn = dir_ME, layer = "ADMIN_domain_d01_WRFChem")
   
@@ -529,43 +552,168 @@ plot(shp_ME)
   
 
 # gerate a time sequence of 6 days
-# start <- as.POSIXct("2015-03-29 10:30")  # MODIS TERRA
-start <- as.POSIXct("2015-03-29 13:30")  # MODIS AQUA
+# start <- as.POSIXct("2015-03-29 13:30")  # MODIS AQUA
+ start <- as.POSIXct("2015-03-29 10:30")  # MODIS TERRA
 interval <- 60*12 #minutes (1 day interval)
 end <- start + as.difftime(5, units="days")  # 6 days
 TS <- seq(from=start, by=interval*60*2, to=end)
 
 # setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AVG_TERRA_MAIAC")
 # setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA")
- setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA")
+# setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA")
+
+# setwd("D:/Dust_Event_UAE_2015/MAIAC_1km/AQUA")
+setwd("D:/Dust_Event_UAE_2015/MAIAC_1km/TERRA")
+
+# output_folder_AQUA <- "D:/Dust_Event_UAE_2015/MAIAC_1km/AQUA/plots_small_domain/"
+output_folder_TERRA <- "D:/Dust_Event_UAE_2015/MAIAC_1km/TERRA/plots_small_domain/"
+
+# AQUA
+# MAIAC_STACK_image <- stack("AQUA_MAIAC_DUST_event_02_April_2015_small.tif")
+# TERRA
+MAIAC_STACK_image <- stack("TERRA_MAIAC_DUST_event_02_April_2015_small.tif")
+
+
+
+####### color pallet
+
+vec_all <- as.vector(MAIAC_STACK_image)
+
+# max_val<- (max(vec_all, na.rm = T))
+max_val <- 4
+# min_val<- (min(vec_all,  na.rm = T))
+min_val <- 0
+
+
+stat_dat <- summary(as.vector(MAIAC_STACK_image))
+IQR <- (as.numeric((stat_dat[5]-stat_dat[2])* 2))# n is the space after IQR
+
+low_IQR<- if(floor(min_val) > floor(as.numeric((stat_dat[2]- IQR)))) floor(min_val) else floor(as.numeric((stat_dat[2]- IQR)))
+high_IQR <-if ( max_val > (as.numeric((stat_dat[5]+IQR)))) max_val else (as.numeric((stat_dat[5]+IQR)))
+
+cool = rainbow(50, start=rgb2hsv(col2rgb('green'))[1], end=rgb2hsv(col2rgb('blue'))[1])
+cool_2 = rainbow(25, start=rgb2hsv(col2rgb('yellow'))[1], end=rgb2hsv(col2rgb('green'))[1])
+warm = rainbow(125, start=rgb2hsv(col2rgb('red'))[1], end=rgb2hsv(col2rgb('yellow'))[1])
+cols = c(rev(cool), rev(cool_2), rev(warm))
+
+# greenyellow at the place of yellow?
 
 # i <- 5
 
+
+
+########################
+### plots of maps ######
+########################
+
+# AQUA
+# raster_MAIAC <- stack("AQUA_MAIAC_DUST_event_02_April_2015_small.tif")
+# TERRA
+raster_MAIAC <- stack("TERRA_MAIAC_DUST_event_02_April_2015_small.tif")
+
+for (i in 1:length(raster_MAIAC@layers)) {
+  name_time <- TS[i]
+ # AQUA_images <- raster("AQUA_MAIAC_DUST_event_02_April_2015_small.tif", band = i)
+  TERRA_images <- raster("TERRA_MAIAC_DUST_event_02_April_2015_small.tif", band = i)
+#  plot(AQUA_images)
+  plot(TERRA_images)
+  
+ # h <- rasterVis::levelplot(AQUA_images, 
+  h <- rasterVis::levelplot(TERRA_images, 
+                            margin=FALSE, main= as.character(name_time),
+                            xlab = "",
+                            ylab = "",
+                            ## about colorbar
+                            colorkey=list(
+                              space='right',                   
+                              labels= list(at= floor(as.numeric( seq(low_IQR, high_IQR, length.out=7))),
+                                           font=3),
+                              axis.line=list(col='black'),
+                              width=0.75,
+                              title=expression(paste("     AOD") )
+                            ),   
+                            ## about the axis
+                            par.settings=list(
+                              strip.border=list(col='transparent'),
+                              strip.background=list(col='transparent'),
+                              axis.line=list(col='black')
+                            ),
+                            scales=list(draw=T, alternating= F),            
+                            #col.regions = colorRampPalette(c("blue", "white","red"))(1e3),
+                            col.regions = cols,
+                            at=unique(c(seq(low_IQR, high_IQR, length.out=200)))) +
+    latticeExtra::layer(sp.polygons(shp_ME))
+  h
+  
+#  png(paste0(output_folder_AQUA ,str_sub(name_time, start = 1, end = -10), "_",
+  png(paste0(output_folder_TERRA ,str_sub(name_time, start = 1, end = -10), "_",
+             str_sub(name_time, start = 12, end = -7), "_",
+             str_sub(name_time, start = 15, end = -4),
+             ".png"), width = 900, height = 900,
+      units = "px", pointsize = 50,
+      bg = "white", res = 200)
+  print(h)
+  dev.off()
+  
+}
+
+
+# to make a movie.......
+# to use with ImageMagik using the commnad line cmd in windows
+# cd into the directory where there are the png files
+
+# magick -delay 100 -loop 0 *.png MAIAC_AQUA_DUST_event_02_April_2015.gif
+
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
+#######################################################################
+
+##### old stuff ######
+
 for (i in 1:6) {
-
-# path <- ".tif$"
-# filenames <- list.files(pattern = path)
-# multiply raster by conversion factor from AOD to PM10
-# raster_MODIS <- raster(filenames[i])
-
-# raster_MODIS_AQUA <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA/AQUA_MAIAC_DUST_event_02_April_2015.tif", band = i)*294
- raster_MODIS_TERRA <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA/TERRA_MAIAC_DUST_event_02_April_2015.tif", band = i)*294
-# raster_MODIS <- raster(filenames[i])*294
-
-# plot(raster_MODIS)
-# plot(shp_UAE, add=TRUE, lwd=1)
-
-name_time <- TS[i]
+  
+  # path <- ".tif$"
+  # filenames <- list.files(pattern = path)
+  # multiply raster by conversion factor from AOD to PM10
+  # raster_MODIS <- raster(filenames[i])
+  
+  raster_MODIS_AQUA <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA/AQUA_MAIAC_DUST_event_02_April_2015.tif", band = i)
+  # raster_MODIS_TERRA <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA/TERRA_MAIAC_DUST_event_02_April_2015.tif", band = i)
+  # raster_MODIS <- raster(filenames[i])*294
+  
+  # plot(raster_MODIS)
+  # plot(shp_UAE, add=TRUE, lwd=1)
+  
+  name_time <- TS[i]
+  
 
 
 # define popup for time scene
-"h1 { font-size: 3px;}"
-content <- paste('<h1><strong>', name_time,'', " TERRA", sep = "")
-# content <- paste('<h1><strong>', name_time,'', "  AQUA", sep = "")
+"h2 { font-size: 3px;}"
+# content <- paste('<h2><strong>', name_time,'', " TERRA", sep = "")
+ content <- paste('<h1><strong>', name_time,'', "  AQUA", sep = "")
 
 
-MIN_PAL <- 0.095*294
-MAX_PAL <- 4*294
+# for AQUA
+# MIN_PAL <- 0.095*294
+# MAX_PAL <- 3.924*294
+ MIN_PAL <- 0
+ MAX_PAL <- 4.1
+
+# for TERRA
+ # MIN_PAL <- 0.095*294
+ # MAX_PAL <- 4.089*294
+ # MIN_PAL <- 0.095
+ # MAX_PAL <- 4.089
 
 
 # pal_MODIS <- colorNumeric(rev(terrain.colors(255)),
@@ -585,12 +733,12 @@ map <- leaflet(shp_ME) %>%
   addPopups(40, 35, content,
             options = popupOptions(closeButton = FALSE)) %>%
   
-  addRasterImage(raster_MODIS_TERRA, 
+  addRasterImage(raster_MODIS_AQUA, 
                  colors = pal_MODIS, 
                  opacity = 0.7, group = "MODIS", maxBytes = 8 * 1024 * 1024) %>%
   
   addPolygons(stroke = TRUE, smoothFactor = 1, fillOpacity = 0,
-              weight = 3, color = "#000000",
+              weight = 2, color = "#000000",
               group = "ME") %>%
   
   addLayersControl(
@@ -598,7 +746,8 @@ map <- leaflet(shp_ME) %>%
     overlayGroups = "MODIS",
     options = layersControlOptions(collapsed = TRUE)) %>%
   addLegend("bottomright", pal = pal_MODIS, values = c(MIN_PAL, MAX_PAL),
-            title = "<br><strong>PM<sub>10</sub> (<font face=symbol>m</font>g/m<sup>3</sup>) MAIAC: </strong>",
+#            title = "<br><strong>PM<sub>10</sub> (<font face=symbol>m</font>g/m<sup>3</sup>) MAIAC: </strong>",
+            title = "<br><strong> AOD: </strong>",
             labFormat = labelFormat(prefix = ""),
             opacity = 0.7)
 # addLegend("bottomright", pal = pal_MODIS, values = getValues(raster_MODIS),
