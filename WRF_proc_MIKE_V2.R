@@ -8,7 +8,7 @@ library(leaflet)
 
 
 # list .nc files
-
+setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs")
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs")
 
 patt<- ".nc"

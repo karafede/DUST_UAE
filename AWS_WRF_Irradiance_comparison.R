@@ -51,7 +51,7 @@ sites_stations_AWS_NCMS <- sites_stations_AWS_NCMS[!(is.na(sites_stations_AWS_NC
 # WRF_STACK_image_Irr <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/WRF_solar_radiation/Radiance_AOD_0_8_WRFChem_02April2015_stack_4_DAYS_LARGE.tif")
 WRF_STACK_image_Irr <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/WRF_solar_radiation/Radiance_AOD_4_5_WRFChem_02April2015_stack_4_DAYS_LARGE.tif")
 
-
+# WRF_STACK_image_Irr <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/radiance_4km_WRFChem_DUST1_Em3.tif")
 
 n <- length(WRF_STACK_image_Irr@layers)
 # n <- length(WRF_STACK_image_Irr@layers)-1
@@ -83,8 +83,11 @@ site_Irr <- NULL
 #  WRF_STACK_image_Irr <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/WRF_solar_radiation/Radiance_AOD_3_6_WRFChem_02April2015_stack_4_DAYS_LARGE.tif", band = i) 
 #  WRF_STACK_image_Irr <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/WRF_solar_radiation/Radiance_AOD_0_8_WRFChem_02April2015_stack_4_DAYS_LARGE.tif", band = i)  
 # WRF_STACK_image_Irr <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/WRF_solar_radiation/Radiance_AOD_4_WRFChem_02April2015_stack_4_DAYS_LARGE.tif", band = i)  
-   WRF_STACK_image_Irr <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/WRF_solar_radiation/Radiance_AOD_4_2_WRFChem_02April2015_stack_4_DAYS_LARGE.tif", band = i)  
 
+WRF_STACK_image_Irr <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/WRF_solar_radiation/Radiance_AOD_4_2_WRFChem_02April2015_stack_4_DAYS_LARGE.tif", band = i)  
+
+# WRF_STACK_image_Irr <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/radiance_4km_WRFChem_DUST1_Em3.tif", band = i)
+   
       
     plot(WRF_STACK_image_Irr)
   EXTRACTED_WRF_Irr <- extract_points(WRF_STACK_image_Irr, sites_stations_AWS_NCMS)
@@ -120,6 +123,8 @@ colnames(extracted_WRF_Irr) <- c("DateTime", "WRF_CHEM_Irr", "station")
 write.csv(extracted_WRF_Irr, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/extracted_WRF_Irradiance_AOD_4_2.csv")
 extracted_WRF_Irr <- read.csv("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/extracted_WRF_Irradiance_AOD_4_2.csv")
 
+# write.csv(extracted_WRF_Irr, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/extracted_WRF_Irradiance_AOD_4km.csv")
+# extracted_WRF_Irr <- read.csv("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/extracted_WRF_Irradiance_AOD_4km.csv")
 
 # add 4 hours to WRF(UTC) DateTime ##############################################
 
@@ -154,6 +159,8 @@ All_AWS_data <- All_AWS_data %>%
 # write.csv(All_AWS_data, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/AWS_WRFChem_Irradiance_Data_2015_AOD_4.csv")
 write.csv(All_AWS_data, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/AWS_WRFChem_Irradiance_Data_2015_AOD_4_2.csv")
 
+# write.csv(All_AWS_data, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/extracted_WRF_Irradiance_AOD_4km.csv")
+
 ################################################################################
 ################################################################################
 
@@ -174,6 +181,8 @@ setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATH
 # AWS_WRF_2015_Irr <- read.csv("AWS_WRFChem_Irradiance_Data_2015_AOD_0_8.csv")
 # AWS_WRF_2015_Irr <- read.csv("AWS_WRFChem_Irradiance_Data_2015_AOD_4.csv")
  AWS_WRF_2015_Irr <- read.csv("AWS_WRFChem_Irradiance_Data_2015_AOD_4_2.csv")
+ 
+# AWS_WRF_2015_Irr <- read.csv("extracted_WRF_Irradiance_AOD_4km.csv")
  
  
  

@@ -74,7 +74,11 @@ AQ_data_2015_PM10_DAYS <- AQ_data_2015_PM10 %>%
 # select unique sites of the AQ data
 sites_stations_PM10 <- AQ_data_2015_PM10[row.names(unique(AQ_data_2015_PM10[,c("Site", "Latitude", "Longitude")])),]
 write_csv(sites_stations_PM10, "sites_PM10.csv")
+ 
 
+# add AERONET site in MASDAR
+AERONET_MASDAR <- read.csv("site_AERONET_MASDAR.csv")
+sites_stations_PM10 <- rbind(sites_stations_PM10, AERONET_MASDAR)
 
 ##############################################################################
 ## make a function that reads each station at each time and extract points ####
@@ -257,7 +261,7 @@ str(extracted_MODIS_PM10)
 ######################################################################################################
 ######################################################################################################
 
-# merge extracted WRF-data with AQ data--------------------------------------------
+# merge extracted MODIS-data with AQ data--------------------------------------------
 
 AQ_MODIS_2015_PM10_DAYS <- AQ_data_2015_PM10_DAYS %>%
   merge(extracted_MODIS_PM10, by = c("Site", "day"))

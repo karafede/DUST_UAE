@@ -37,22 +37,22 @@ sites_stations_AWS_NCMS <- sites_stations_AWS_NCMS[!(is.na(sites_stations_AWS_NC
 
 
 ##############################################################################
-# read IRRADIATION data from WRF Chem ########################################
+# read WIND SPEED data from WRF Chem ########################################
 ##############################################################################
 ## make a function that reads each station at each time and extract points ###
 ##############################################################################
 
 # read all bands in a stack raster
-WRF_STACK_image_Irr <- stack("Z:/_SHARED_FOLDERS/Air Quality/WRFChem/20150402_dust_only/big_domain/Wind_Speed_WRFChem_02April2015_stack_6_DAYS_LARGE.tif")
-n <- length(WRF_STACK_image_Irr@layers)-1
+WRF_STACK_image_Irr <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/wind_speed_4km_WRFChem_DUST1_Em3.tif")
+n <- length(WRF_STACK_image_Irr@layers)
 
 
 # generate a time sequence for the WRF-Chem run at intervals of 1 hour (should be 144 images)
-start <- as.POSIXct("2015-03-29 00:00:00")
+start <- as.POSIXct("2015-03-31 00:00:00")
 interval <- 60 #minutes
 end <- start + as.difftime(6, units="days")
 TS <- seq(from=start, by=interval*60, to=end)   # same time series as the AQ data
-TS <- TS[1:144]
+TS <- TS[1:96]
 
 # i <- 3
 
@@ -67,7 +67,7 @@ site_WS <- NULL
 
  for (i in 1:n) {   # this is a time
   
-  WRF_STACK_image_WS <- raster("Z:/_SHARED_FOLDERS/Air Quality/WRFChem/20150402_dust_only/big_domain/Wind_Speed_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = i)
+  WRF_STACK_image_WS <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/wind_speed_4km_WRFChem_DUST1_Em3.tif", band = i)
   plot(WRF_STACK_image_WS)
   EXTRACTED_WRF_WS <- extract_points(WRF_STACK_image_WS, sites_stations_AWS_NCMS)
   extracted_WRF_WS = rbind(extracted_WRF_WS, EXTRACTED_WRF_WS)    # data vector
@@ -83,9 +83,8 @@ colnames(extracted_WRF_WS) <- c("DateTime", "WRF_CHEM_WS", "station")
 
 
 # save data-------------------------------------
-write.csv(extracted_WRF_WS, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/extracted_WRF_WindSpeed.csv")
-
-extracted_WRF_WS <- read.csv("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/extracted_WRF_WindSpeed.csv")
+write.csv(extracted_WRF_WS, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/extracted_WRF_WindSpeed_4km.csv")
+extracted_WRF_WS <- read.csv("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/extracted_WRF_WindSpeed_4km.csv")
 
 # add 4 hours to WRF(UTC) DateTime ##############################################
 
@@ -116,7 +115,7 @@ All_AWS_data <- All_AWS_data %>%
   merge(extracted_WRF_WS, by = c("station", "DateTime"))
 
 
-write.csv(All_AWS_data, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/AWS_WRFChem_WindSpeed_Data_2015.csv")
+write.csv(All_AWS_data, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/AWS_WRFChem_WindSpeed_Data_2015_4km.csv")
 
 ################################################################################
 ################################################################################
@@ -134,7 +133,7 @@ library(openair)
 
 
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs")
-AWS_WRF_2015_WS <- read.csv("AWS_WRFChem_WindSpeed_Data_2015.csv")
+AWS_WRF_2015_WS <- read.csv("AWS_WRFChem_WindSpeed_Data_2015_4km.csv")
 
 AWS_WRF_2015_WS <- AWS_WRF_2015_WS %>%
   mutate(DateTime = ymd_hms(DateTime))
@@ -151,7 +150,7 @@ AWS_WRF_2015_WS_selected_Sites  <- AWS_WRF_2015_WS %>%
 ######### plot TIME-SERIES of AWS NCMS data data and WRF Temperature data #########################################
 ###################################################################################################################
 
-jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/NCMS_WRF_WindSpeed_TimeSeries.jpg',
+jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/NCMS_WRF_WindSpeed_TimeSeries_4km.jpg',
      quality = 100, bg = "white", res = 300, width = 18, height = 9, units = "in")
 par(mar=c(4, 10, 9, 2) + 0.3)
 oldpar <- par(las=1)
@@ -181,7 +180,7 @@ dev.off()
 
 ################################################
 
-jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/NCMS_WRF_WindSpeed_TimeSeries_selected.jpg',
+jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/NCMS_WRF_WindSpeed_TimeSeries_selected_4km.jpg',
      quality = 100, bg = "white", res = 300, width = 18, height = 9, units = "in")
 par(mar=c(4, 10, 9, 2) + 0.3)
 oldpar <- par(las=1)
@@ -199,7 +198,7 @@ plot <- ggplot(AWS_WRF_2015_WS_selected_Sites, aes(DateTime, wind_speed)) +
         axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=28, colour = "black", face="bold")) +
   theme(axis.title.y = element_text(face="bold", colour="black", size=28),
         axis.text.y  = element_text(angle=0, vjust=0.5, size=28, colour = "black")) +
-  ylim(0.5, 15)  
+  ylim(0.5, 20)  
 plot
 
 

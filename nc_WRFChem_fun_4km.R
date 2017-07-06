@@ -8,17 +8,15 @@ library(stringr)
 
 # list .nc files
 setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs")
-# 12km
-setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km")
-# setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_ADO_FK/DUST/12km")
-
 # 4km
 setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km")
-# setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/DUST/4km")
+# setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_ADO_FK/DUST/12km")
+
 
 patt<- ".nc"
 filenames <- list.files(pattern = patt)
 filenames <- filenames
+filenames <- filenames[1:4]
 
 #############################################
 ## function to import multiple .nc files ####
@@ -129,9 +127,9 @@ TS <- TS[1:96]
  # plot(AAA) 
  
  
-# writeRaster(BBB, "AOD_12km_WRFChem_DUST300.tif" , options= "INTERLEAVE=BAND", overwrite=T)
-writeRaster(BBB, "AOD_4km_WRFChem_DUST300.tif" , options= "INTERLEAVE=BAND", overwrite=T)
-writeRaster(BBB, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/AOD_4km_WRFChem_DUST300.tif" , options= "INTERLEAVE=BAND", overwrite=T)
+
+writeRaster(BBB, "AOD_4km_WRFChem_DUST1_Em3.tif" , options= "INTERLEAVE=BAND", overwrite=T)
+writeRaster(BBB, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/AOD_4km_WRFChem_DUST1_Em3.tif" , options= "INTERLEAVE=BAND", overwrite=T)
 
 
 #########################################################################################
@@ -186,12 +184,15 @@ TS <- TS[1:96]
 # WRF_STACK_image <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif")
 
 # WRF_STACK_image <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/AOD_WRFChem_02April2015_stack_5_DAYS.tif")
-WRF_STACK_image <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST300.tif")
+WRF_STACK_image <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/AOD_4km_WRFChem_DUST1_Em3.tif")
 
 
-output_folder <- "D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png/AOD_dust_3_12km/"
+output_folder <- "D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png/AOD_4km_DUST1_Em3/"
 
 ####### color pallet
+
+# recalibrate the model output (--> AOD*6.25)
+WRF_STACK_image <- WRF_STACK_image*6.25
 
 vec_all <- as.vector(WRF_STACK_image)
 
@@ -222,12 +223,12 @@ cols = c(rev(cool), rev(cool_2), rev(warm))
 ### plots of maps ######
 ########################
 
-AOD_images <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST300.tif")
+AOD_images <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/AOD_4km_WRFChem_DUST1_Em3.tif")
 
 for (i in 1:length(AOD_images@layers)) {
   TITLE <- paste(TS[i], " (UTC)")
   name_time <- TS[i]
-  AOD_images <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST300.tif", band = i)
+  AOD_images <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/AOD_4km_WRFChem_DUST1_Em3.tif", band = i)*6.25
   # plot(AOD_images)
   
   h <- rasterVis::levelplot(AOD_images, 

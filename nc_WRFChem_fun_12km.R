@@ -10,11 +10,8 @@ library(stringr)
 setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs")
 # 12km
 setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km")
+# setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/archived")
 # setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_ADO_FK/DUST/12km")
-
-# 4km
-# setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km")
-# setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/DUST/4km")
 
 patt<- ".nc"
 filenames <- list.files(pattern = patt)
@@ -27,7 +24,7 @@ filenames <- filenames
 # filenames <- filenames[1]
 
 
-# gerate a time sequence for the WRF-Chem run at intervals of 1 hour (should be 145 images), 6 days
+# generate a time sequence for the WRF-Chem run at intervals of 1 hour (should be 145 images), 6 days
 start <- as.POSIXct("2015-03-31 00:00")
 interval <- 60 #minutes
 end <- start + as.difftime(6, units="days")
@@ -129,9 +126,10 @@ TS <- TS[1:96]
  # plot(AAA) 
  
  
-writeRaster(BBB, "AOD_12km_WRFChem_DUST300.tif" , options= "INTERLEAVE=BAND", overwrite=T)
-writeRaster(BBB, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST300.tif" , options= "INTERLEAVE=BAND", overwrite=T)
+writeRaster(BBB, "AOD_12km_WRFChem_DUST1_Em3.tif" , options= "INTERLEAVE=BAND", overwrite=T)
+writeRaster(BBB, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif" , options= "INTERLEAVE=BAND", overwrite=T)
 
+# writeRaster(BBB, "AOD_12km_WRFChem_DUST13_Em8.tif" , options= "INTERLEAVE=BAND", overwrite=T)
 
 
 #########################################################################################
@@ -156,7 +154,7 @@ library(lattice)
 # dir_ME <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
 dir_ME <- "D:/Dust_Event_UAE_2015/WRFChem_domain"
 ### shapefile for WRF_domain
-shp_ME <- readOGR(dsn = dir_ME, layer = "ADMIN_domain_d01_4km_WRFChem")
+shp_ME <- readOGR(dsn = dir_ME, layer = "ADMIN_domain_d01_12km_WRFChem")
 shp_ME <- spTransform(shp_ME, CRS("+init=epsg:4326"))
 
 plot(shp_ME)
@@ -186,26 +184,32 @@ TS <- TS[1:96]
 # WRF_STACK_image <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif")
 
 # WRF_STACK_image <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/AOD_WRFChem_02April2015_stack_5_DAYS.tif")
-WRF_STACK_image <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/AOD_4km_WRFChem_DUST300.tif")
+WRF_STACK_image <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif")
+# WRF_STACK_image <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/archived/AOD_12km_WRFChem_DUST13_Em8.tif")
 
+output_folder <- "D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png/AOD_12km_DUST1_Em3/"
+# output_folder <- "D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png/AOD_12km_DUST3_Em8/"
 
-output_folder <- "D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png/AOD_dust_3_4km/"
 
 ####### color pallet
+
+# recalibrate the model output (--> AOD*6.25)
+WRF_STACK_image <- WRF_STACK_image*6.25
 
 vec_all <- as.vector(WRF_STACK_image)
 
 max_val<- (max(vec_all, na.rm = T))
 min_val<- (min(vec_all,  na.rm = T))
 
+ # max_val <- 4
+ # min_val <- 0
+
 
 stat_dat <- summary(as.vector(WRF_STACK_image))
-IQR <- (as.numeric((stat_dat[5]-stat_dat[2])* 2))# n is the space after IQR
+IQR <- (as.numeric((stat_dat[5]-stat_dat[2])* 2))# n is the space after IQR   #2
 
 low_IQR<- if(floor(min_val) > floor(as.numeric((stat_dat[2]- IQR)))) floor(min_val) else floor(as.numeric((stat_dat[2]- IQR)))
 high_IQR <-if ( max_val > (as.numeric((stat_dat[5]+IQR)))) max_val else (as.numeric((stat_dat[5]+IQR)))
-
-
 
 # cool = rainbow(25, start=rgb2hsv(col2rgb('cyan'))[1], end=rgb2hsv(col2rgb('blue'))[1])
 cool = rainbow(50, start=rgb2hsv(col2rgb('green'))[1], end=rgb2hsv(col2rgb('royalblue2'))[1])
@@ -222,13 +226,16 @@ cols = c(rev(cool), rev(cool_2), rev(warm))
 ### plots of maps ######
 ########################
 
-AOD_images <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/AOD_4km_WRFChem_DUST300.tif")
+AOD_images <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif")
+# AOD_images <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/archived/AOD_12km_WRFChem_DUST13_Em8.tif")
 
 for (i in 1:length(AOD_images@layers)) {
   TITLE <- paste(TS[i], " (UTC)")
   name_time <- TS[i]
-  AOD_images <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/AOD_4km_WRFChem_DUST300.tif", band = i)
-  # plot(AOD_images)
+  AOD_images <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif", band = i)*6.25
+#   AOD_images <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/archived/AOD_12km_WRFChem_DUST13_Em8.tif", band = i)
+  
+    # plot(AOD_images)
   
   h <- rasterVis::levelplot(AOD_images, 
                             margin=FALSE, main= as.character(TITLE),

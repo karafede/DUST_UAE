@@ -36,11 +36,11 @@ AQ_data_2015_PM10 <- AQ_data_2015 %>%
   filter(Pollutant == "PM10")
   # filter(Pollutant %in% c("PM10", "PM2.5"))  # multiple filtering
 
-AQ_data_2015_PM25 <- AQ_data_2015 %>%
-  mutate(day = date(DateTime)) %>%
-  filter(day >= "2015-03-29" & day <= "2015-04-04") %>%    # match WRFChem data
-  filter(Pollutant == "PM2.5")
-# filter(Pollutant %in% c("PM10", "PM2.5"))
+# AQ_data_2015_PM25 <- AQ_data_2015 %>%
+#   mutate(day = date(DateTime)) %>%
+#   filter(day >= "2015-03-29" & day <= "2015-04-04") %>%    # match WRFChem data
+#   filter(Pollutant == "PM2.5")
+# # filter(Pollutant %in% c("PM10", "PM2.5"))
 
 AQ_data_2015_PM10 <- AQ_data_2015_PM10 %>%
   mutate(DATETIME = ymd_hms(DateTime)-300) 
@@ -71,9 +71,9 @@ summary_stat <- AQ_data_2015_PM10 %>%
   summarise(mean_PM10 = mean(Value, na.rm = TRUE))
 
 
-AQ_data_2015_PM25$DATETIME <- trunc(AQ_data_2015_PM25$DATETIME, units = "mins")
-AQ_data_2015_PM25$DATETIME <- as.POSIXct(AQ_data_2015_PM25$DATETIME)
-str(AQ_data_2015_PM25)
+# AQ_data_2015_PM25$DATETIME <- trunc(AQ_data_2015_PM25$DATETIME, units = "mins")
+# AQ_data_2015_PM25$DATETIME <- as.POSIXct(AQ_data_2015_PM25$DATETIME)
+# str(AQ_data_2015_PM25)
 
 ##
 # load WRFChem output---------------------------------------
@@ -98,7 +98,7 @@ plot(shp_UAE)
 
 # load one WRF raster image.....just a trial...only one hour....2015-03-31_03_00
 
-WRF_STACK_image <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 3)
+WRF_STACK_image <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/DUST/4km/4km_WRFChem_DUST1_Em3.tif", band = 3)
 plot(WRF_STACK_image)
 
 # overlay shape of UAE border
@@ -109,9 +109,13 @@ res(WRF_STACK_image)
 
 # select unique sites of the AQ data
 sites_stations_PM10 <- AQ_data_2015_PM10[row.names(unique(AQ_data_2015_PM10[,c("Site", "Latitude", "Longitude")])),]
-sites_stations_PM25 <- AQ_data_2015_PM25[row.names(unique(AQ_data_2015_PM25[,c("Site", "Latitude", "Longitude")])),]
+# sites_stations_PM25 <- AQ_data_2015_PM25[row.names(unique(AQ_data_2015_PM25[,c("Site", "Latitude", "Longitude")])),]
 
 # AAA <- extract_points(WRF_STACK_image, sites_stations)
+
+# add AERONET site in MASDAR
+AERONET_MASDAR <- read.csv("site_AERONET_MASDAR.csv")[, 1:13]
+sites_stations_PM10 <- rbind(sites_stations_PM10, AERONET_MASDAR)
 
 
 ##############################################################################
@@ -119,16 +123,16 @@ sites_stations_PM25 <- AQ_data_2015_PM25[row.names(unique(AQ_data_2015_PM25[,c("
 ##############################################################################
 
 # read all bands in a stack raster
-WRF_STACK_image <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif")
-n <- length(WRF_STACK_image@layers)-1
+WRF_STACK_image <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/DUST/4km/AOD_4km_WRFChem_DUST1_Em3.tif")
+n <- length(WRF_STACK_image@layers)
 
 
 # generate a time sequence for the WRF-Chem run at intervals of 1 hour (should be 73 images)
-start <- as.POSIXct("2015-03-29 00:00:00")
+start <- as.POSIXct("2015-03-31 00:00:00")
 interval <- 60 #minutes
 end <- start + as.difftime(6, units="days")
 TS <- seq(from=start, by=interval*60, to=end)   # same time series as the AQ data
-TS <- TS[1:144]
+TS <- TS[1:96]
 
 # i <- 3
 
@@ -146,7 +150,7 @@ site_PM10 <- NULL
  for (i in 1:n) {   # this is a time
 #  for (i in 1:3) {
   
-  WRF_STACK_image <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = i)
+  WRF_STACK_image <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/DUST/4km/AOD_4km_WRFChem_DUST1_Em3.tif", band = i)
   plot(WRF_STACK_image)
   EXTRACTED_WRF_PM10 <- extract_points(WRF_STACK_image, sites_stations_PM10)
  # names(EXTRACTED_WRF) <- as.character(TS[i])
@@ -166,8 +170,8 @@ colnames(extracted_WRF_PM10) <- c("DATETIME", "WRF_CHEM", "Site")
 
 
 # save data-------------------------------------
-write.csv(extracted_WRF_PM10, "WRF_trial_runs/extracted_WRF_PM10.csv")
-extracted_WRF_PM10 <- read.csv("WRF_trial_runs/extracted_WRF_PM10.csv")
+write.csv(extracted_WRF_PM10, "WRF_trial_runs/extracted_WRF_PM10_4km.csv")
+extracted_WRF_PM10 <- read.csv("WRF_trial_runs/extracted_WRF_PM10_4km.csv")
 
 # add 4 hours to WRF(UTC) DateTime ##############################################
 
@@ -243,7 +247,7 @@ AQ_WRF_2015_PM10 <- AQ_data_2015_PM10 %>%
 # AQ_WRF_2015 <- AQ_data_2015 %>%
 #   merge(extracted_WRF, c("Site", "DATETIME"))
 
-write.csv(AQ_WRF_2015_PM10, "WRF_trial_runs/AQ_Data_WRF_2_April_2015_PM10.csv")
+write.csv(AQ_WRF_2015_PM10, "WRF_trial_runs/AQ_Data_WRF_2_April_2015_PM10_4km.csv")
 
 # AQ_WRF_2015_PM25 <- AQ_data_2015_PM25 %>%
 #   merge(extracted_WRF_PM25, by = c("Site", "DATETIME"))
@@ -265,8 +269,9 @@ library(splines)
 library(plyr)
 
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015")
-AQ_WRF_2015_PM10 <- read.csv("WRF_trial_runs/AQ_Data_WRF_2_April_2015_PM10.csv")
+AQ_WRF_2015_PM10 <- read.csv("WRF_trial_runs/AQ_Data_WRF_2_April_2015_PM10_4km.csv")
 # AQ_WRF_2015 <- read.csv("AQ_Data_WRF_2_April_2015_PM25.csv")
+
 
 AQ_WRF_2015_PM10 <- AQ_WRF_2015_PM10 %>%
   mutate(DATETIME = ymd_hms(DATETIME))
