@@ -276,6 +276,7 @@ library(ggplot2)
 library(tidyr)
 library(splines)
 library(plyr)
+library(pracma)
 
 
 
@@ -290,6 +291,8 @@ jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AOD_M
 par(mar=c(4, 10, 9, 2) + 0.3)
 oldpar <- par(las=1)
 
+min <- as.POSIXct("2015-03-31 09:00:00") 
+max <- as.POSIXct("2015-04-03 22:00:00") 
 
 plot <- ggplot(AOD_MODIS_2015_DAYS, aes(DATETIME, MAIAC)) + 
   theme_bw() +
@@ -301,7 +304,8 @@ plot <- ggplot(AOD_MODIS_2015_DAYS, aes(DATETIME, MAIAC)) +
         axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=25, colour = "black", face="bold")) +
   theme(axis.title.y = element_text(face="bold", colour="black", size=25),
         axis.text.y  = element_text(angle=0, vjust=0.5, size=25, colour = "black")) +
-  ylim(0, 2)  
+  ylim(0, 2) +
+  xlim(min, max)
 plot
 
 
@@ -309,161 +313,106 @@ par(oldpar)
 dev.off()
 
 
+# bind AERONET, MODIS-MAIAC and WRF-Chem simulation #################
+# AERONET_WRF_2015_DAYS <- read.csv("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/AOD_AERONET_WRF_2_April_2015.csv")
+# 
+# str(AERONET_WRF_2015_DAYS)
+# AERONET_WRF_2015_DAYS <- AERONET_WRF_2015_DAYS %>%
+# mutate(DATETIME = ymd_hms(DATETIME))
+# 
+# 
+# AERONET_WRF <- AERONET_WRF_2015_DAYS %>%
+#   dplyr::select(DATETIME,
+#          WRF_Chem,
+#          AOT)
+# 
+# 
+# AERONET_MODIS <- AOD_MODIS_2015_DAYS %>%
+#   dplyr::select(DATETIME,
+#                 AOT,
+#                 MAIAC)
+# 
+# 
+# min <- as.POSIXct("2015-03-31 09:00:00") 
+# max <- as.POSIXct("2015-04-03 22:00:00") 
+# 
+# plot <- ggplot(AERONET_MODIS, aes(DATETIME, MAIAC)) + 
+#   theme_bw() +
+#   geom_line(aes(y = MAIAC, col = "MAIAC"), alpha=1, col="blue", lwd = 1.5,  na.rm = TRUE) +
+#   geom_line(aes(y = AOT, col = "AOT"), alpha=1, col="red", linetype = "dashed",lwd = 1.5) +
+#   # plot data from another dataset
+#   geom_line(data = AERONET_WRF,  aes(y = WRF_Chem, col = "WRF_Chem"), alpha=1, col="black", linetype = "dashed",lwd = 1.5) +
+#   geom_line(data = AERONET_WRF,  aes(y = AOT, col = "AOT"), alpha=1, col="red",lwd = 1.5) +
+#   theme(legend.position="none") + 
+#   ylab(expression(paste("AOD"))) +
+#   theme(axis.title.x=element_blank(),
+#         axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=25, colour = "black", face="bold")) +
+#   theme(axis.title.y = element_text(face="bold", colour="black", size=25),
+#         axis.text.y  = element_text(angle=0, vjust=0.5, size=25, colour = "black")) +
+#   ylim(0, 2.5) +
+#   xlim(min, max)
+# plot
 
 
+##########################################################################################
+##########################################################################################
+
+library(ggplot2)
+library(pracma)
+
+# merged together AERONET-WRF with AERONET-MODIS/MAIAC in excel and created a new dataframe
+AERONET_MAIAC_WRF <- read.csv("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/4km/AERONET_MAIAC_WRF_new.csv")
+
+# adjust datetime format
+str(AERONET_MAIAC_WRF)
+AERONET_MAIAC_WRF <- AERONET_MAIAC_WRF %>%
+  mutate(DATETIME = mdy_hm(DATETIME))
+
+# since there are gaps in the dataframe for WRF and MAIAC, make and INTERPOLATION
+# add an index column
+AERONET_MAIAC_WRF$x <- 1:nrow(AERONET_MAIAC_WRF)
 
 
-#######################################################################################
-#######################################################################################
-#######################################################################################
-#######################################################################################
-### measurements data #################################################################
+AERONET_MAIAC_WRF$MAIAC_interp <- with(AERONET_MAIAC_WRF, interp1(x, MAIAC, x, "nearest"))
+AERONET_MAIAC_WRF$WRF_interp <- with(AERONET_MAIAC_WRF, interp1(x, WRF, x, "nearest"))  #OK
 
-jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/PM10_measured.jpg',
-     quality = 100, bg = "white", res = 300, width = 9, height = 9, units = "in")
+# plot
+
+
+jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/aod_AERONET_WRF_MAIAC_comparison.jpg',
+     quality = 100, bg = "white", res = 300, width = 12, height = 9, units = "in")
 par(mar=c(4, 10, 9, 2) + 0.3)
 oldpar <- par(las=1)
 
-# omit empty lines
-AQ_MODIS_long <- na.omit(AQ_MODIS_long)
+min <- as.POSIXct("2015-03-31 09:00:00") 
+max <- as.POSIXct("2015-04-03 22:00:00") 
 
-# check your data  PM10 measurements ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-plot <- ggplot(AQ_MODIS_long, aes(Site, mean_value)) +
+plot <- ggplot(AERONET_MAIAC_WRF, aes(DATETIME, MAIAC)) + 
   theme_bw() +
-  geom_boxplot() + 
-  theme(axis.title.x=element_blank(),
-        axis.text.x  = element_text(angle=90, vjust=0.5, hjust = 1, size=12, colour = "black", face="bold")) +
-  ylab(expression(paste(PM[10], " (µg/",m^3, ")  Measured"),size=20)) + 
-  theme(axis.title.y = element_text(face="bold", colour="black", size=20),
-        axis.text.y  = element_text(angle=0, vjust=0.5, size=20, colour = "black")) +
-  guides(fill=FALSE)  
-plot
-
-
-par(oldpar)
-dev.off()
-
-
-
-# MODIS-MAIAC data
-
-
-jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/MODIS-MAIAC.jpg',
-     quality = 100, bg = "white", res = 300, width = 9, height = 9, units = "in")
-par(mar=c(4, 10, 9, 2) + 0.3)
-oldpar <- par(las=1)
-
-
-plot <- ggplot(AQ_MODIS_long, aes(Site, MODIS)) +
-  theme_bw() +
-  geom_boxplot() + 
-  ylim(c(0, 2500)) +
-  theme(axis.title.x=element_blank(),
-        axis.text.x  = element_text(angle=90, vjust=0.5, hjust = 1, size=12, colour = "black", face="bold")) +
-  ylab(expression(paste(PM[10], " (µg/",m^3, ")  MODIS-MAIAC"),size=20)) + 
-  theme(axis.title.y = element_text(face="bold", colour="black", size=20),
-        axis.text.y  = element_text(angle=0, vjust=0.5, size=20, colour = "black")) +
-  guides(fill=FALSE)  
-plot
-
-
-par(oldpar)
-dev.off()
-
-
-
-AQ_MODIS_long <- AQ_MODIS_long %>%
-  #  filter(mean_value < 2500) %>%  #check background value (this value has been estimated from the above boxplot)
-  filter(mean_value > 0) %>%
-  filter(MODIS > 0) 
-#  filter(MODIS < 1100)
-
-str(AQ_MODIS_long)
-
-
-#### fit function and label for PM AQ and WRF-CHEM data  ########################
-#### this funtion FORCE regression to pass through the origin ###################
-
-
-# WE ONLY HAVE 3 RASTERS, THEREFORE THE CORRELATION CANNOT BE DONE WITH FACET ##################
-
-# lm_eqn = function(m) {
-# 
-#   l <- list(a = format(coef(m)[1], digits = 2),
-#             b = format(abs(coef(m)[2]), digits = 2),
-#             r2 = format(summary(m)$r.squared, digits = 3));
-# 
-#   if (coef(m)[2] >= 0)  {
-#     eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,l)
-#   } else {
-#     eq <- substitute(italic(y) == a - b %.% italic(x)*","~~italic(r)^2~"="~r2,l)
-#   }
-# 
-#   as.character(as.expression(eq));
-# }
-
-
-
-#### this funtion FORCE regression to pass through the origin #######################
-
-lm_eqn <- function(df){
-  m <- lm(mean_value ~ -1 + MODIS, df);
-  eq <- substitute(italic(y) == b %.% italic(x)*","~~italic(r)^2~"="~r2,
-                   list(b = format(coef(m)[1], digits = 2),
-                        r2 = format(summary(m)$r.squared, digits = 3)))
-  as.character(as.expression(eq));
-}
-
-
-
-################### PM10 versus PM10 MODIS #############################
-
-
-# plot with regression line----- 
-
-
-jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/PM10_vs_MAIAC_MODIS_PM10_all_sites.jpg',   
-    quality = 100, bg = "white", res = 200, width = 15, height = 7, units = "in")
-par(mar=c(4, 10, 9, 2) + 0.3)
-oldpar <- par(las=1)
-
-
-
-# define regression equation for each season
-eq_PM10 <- ddply(AQ_MODIS_long, .(Site),lm_eqn)
-
-
-# ggplot(PM25_AOD, aes(x=Val_AOD, y=Val_PM25, color = season)) +
-ggplot(AQ_MODIS_long, aes(x=MODIS, y=mean_value)) +
-  theme_bw() +
- # geom_jitter(colour=alpha("black",0.15)) +
- geom_point(size = 2, color='black') +    # Use hollow circles
- facet_wrap( ~ Site, ncol=4) +
-  theme( strip.text = element_text(size = 9)) + 
-  scale_color_manual(values = c("#ff0000", "#0000ff", "#000000", "#ffb732")) + 
-#  geom_smooth(method="lm") +  # Add linear regression line
-  geom_smooth(method = "lm", formula = y ~ -1 + x) +  # force fit through the origin
-  ylab(expression(paste(PM[10], " (µg/",m^3, ")", " ", "measurements"))) +
-#  xlab(expression(paste(PM[10], " (µg/",m^3, ")", " ", "MODIS"))) +
-  xlab(expression(paste(PM[10], " (µg/",m^3, ")", " ", "MAIAC-MODIS"))) +
-  ylim(c(0, 2600)) + 
-  xlim(c(0, 2000)) +
-  theme(axis.title.y = element_text(face="bold", colour="black", size=10),
-        axis.text.y  = element_text(angle=0, vjust=0.5, size=8)) +
-  theme(axis.title.x = element_text(face="bold", colour="black", size=10),
-        axis.text.x  = element_text(angle=0, vjust=0.5, size=10)) +
+  geom_line(aes(y = MAIAC_interp, col = "MAIAC"), alpha=1, col="blue", lwd = 1.5,  na.rm = TRUE) +
+  geom_line(aes(y = AOT, col = "AOT"), alpha=1, col="red", linetype = "dashed",lwd = 1.5) +
+  geom_line(aes(y = WRF_interp, col = "WRF"), alpha=1, col="black", lwd = 1.5) +
   
-  # geom_text(aes(x = 130, y = 700, label = lm_eqn(lm(mean_value ~ MODIS, AQ_MODIS_2015_PM10_DAYS))),
-  #           size = 7,
-  #           color = "red",
-  #           parse = TRUE)
-
-geom_text(data = eq_PM10, aes(x = 1600, y = 1500, label = V1),
-          parse = TRUE, inherit.aes=FALSE, size = 3, color = "black" )
-
+  theme(legend.position="none") + 
+  ylab(expression(paste("AOD"))) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=25, colour = "black", face="bold")) +
+  theme(axis.title.y = element_text(face="bold", colour="black", size=25),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=25, colour = "black")) +
+  ylim(0, 2.5) +
+  xlim(min, max)
+plot
 
 
 par(oldpar)
 dev.off()
+
+##########
+## end ###
+##########
+
+
+
+
 
 

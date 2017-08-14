@@ -32,7 +32,6 @@ TS <- seq(from=start, by=interval*60, to=end)
 TS <- TS[1:96]
 
 
-
  import_nc_WRF <- function(filenames){
 
    
@@ -127,10 +126,10 @@ TS <- TS[1:96]
  
  
 writeRaster(BBB, "AOD_12km_WRFChem_DUST1_Em3.tif" , options= "INTERLEAVE=BAND", overwrite=T)
-writeRaster(BBB, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif" , options= "INTERLEAVE=BAND", overwrite=T)
+# writeRaster(BBB, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif" , options= "INTERLEAVE=BAND", overwrite=T)
 
-# writeRaster(BBB, "AOD_12km_WRFChem_DUST13_Em8.tif" , options= "INTERLEAVE=BAND", overwrite=T)
-
+# writeRaster(BBB, "AOD_12km_WRFChem_DUST3_Em8.tif" , options= "INTERLEAVE=BAND", overwrite=T)
+# writeRaster(BBB, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/archived/AOD_12km_WRFChem_DUST3_Em8.tif" , options= "INTERLEAVE=BAND", overwrite=T)
 
 #########################################################################################
 #########################################################################################
@@ -160,8 +159,6 @@ shp_ME <- spTransform(shp_ME, CRS("+init=epsg:4326"))
 plot(shp_ME)
 
 
-
-
 # set directory where we want to save the images
 setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png")
 # setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/images_png")
@@ -185,7 +182,7 @@ TS <- TS[1:96]
 
 # WRF_STACK_image <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/AOD_WRFChem_02April2015_stack_5_DAYS.tif")
 WRF_STACK_image <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif")
-# WRF_STACK_image <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/archived/AOD_12km_WRFChem_DUST13_Em8.tif")
+# WRF_STACK_image <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/archived/AOD_12km_WRFChem_DUST3_Em8.tif")
 
 output_folder <- "D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png/AOD_12km_DUST1_Em3/"
 # output_folder <- "D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png/AOD_12km_DUST3_Em8/"
@@ -194,15 +191,16 @@ output_folder <- "D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png/AOD_12km_DUST
 ####### color pallet
 
 # recalibrate the model output (--> AOD*6.25)
-WRF_STACK_image <- WRF_STACK_image*6.25
+# WRF_STACK_image <- WRF_STACK_image*6.25
 
 vec_all <- as.vector(WRF_STACK_image)
 
 max_val<- (max(vec_all, na.rm = T))
 min_val<- (min(vec_all,  na.rm = T))
 
- # max_val <- 4
- # min_val <- 0
+# use this range only for dust_opt = 1 and Em = 3
+  max_val <- 4
+  min_val <- 0
 
 
 stat_dat <- summary(as.vector(WRF_STACK_image))
@@ -227,13 +225,13 @@ cols = c(rev(cool), rev(cool_2), rev(warm))
 ########################
 
 AOD_images <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif")
-# AOD_images <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/archived/AOD_12km_WRFChem_DUST13_Em8.tif")
+# AOD_images <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/archived/AOD_12km_WRFChem_DUST3_Em8.tif")
 
 for (i in 1:length(AOD_images@layers)) {
   TITLE <- paste(TS[i], " (UTC)")
   name_time <- TS[i]
   AOD_images <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif", band = i)*6.25
-#   AOD_images <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/archived/AOD_12km_WRFChem_DUST13_Em8.tif", band = i)
+#   AOD_images <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/archived/AOD_12km_WRFChem_DUST3_Em8.tif", band = i)
   
     # plot(AOD_images)
   
@@ -243,12 +241,12 @@ for (i in 1:length(AOD_images@layers)) {
                             ylab = "",
                             ## about colorbar
                             colorkey=list(
-                              space='right',                   
+                              space='bottom',                   
                               labels= list(at= floor(as.numeric( seq(low_IQR, high_IQR, length.out=7))),
                                            font=3),
                               axis.line=list(col='black'),
                               width=0.75,
-                              title=expression(paste("     AOD") )
+                              title=expression(paste("          AOD") )
                             ),   
                             ## about the axis
                             par.settings=list(

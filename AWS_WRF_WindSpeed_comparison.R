@@ -144,7 +144,7 @@ str(AWS_WRF_2015_WS)
 
 AWS_WRF_2015_WS_selected_Sites  <- AWS_WRF_2015_WS %>%
   filter(station %in% c("Al Faqa", "Madinat Zayed", "Hatta",
-                        "Al Ain","Alkhazna", "Rezeen"))
+                        "Al Ain","Alkhazna", "Rezeen", "Abu Dhabi", "Al Dhaid"))
 
 ###################################################################################################################
 ######### plot TIME-SERIES of AWS NCMS data data and WRF Temperature data #########################################
@@ -185,6 +185,9 @@ jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHE
 par(mar=c(4, 10, 9, 2) + 0.3)
 oldpar <- par(las=1)
 
+min <- as.POSIXct("2015-03-31 00:00:00") 
+max <- as.POSIXct("2015-04-04 11:00:00") 
+
 
 plot <- ggplot(AWS_WRF_2015_WS_selected_Sites, aes(DateTime, wind_speed)) + 
   theme_bw() +
@@ -192,13 +195,14 @@ plot <- ggplot(AWS_WRF_2015_WS_selected_Sites, aes(DateTime, wind_speed)) +
   geom_line(aes(y = WRF_CHEM_WS, col = "WRF_CHEM_WS"), alpha=1, col="blue", size = 1) +
   facet_wrap( ~ station, ncol=2) +
   theme(legend.position="none") + 
-  theme(strip.text = element_text(size = 28)) + 
+  theme(strip.text = element_text(size = 26)) + 
   ylab(expression(paste("Wind Speed (m/s)"))) +
   theme(axis.title.x=element_blank(),
         axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=28, colour = "black", face="bold")) +
   theme(axis.title.y = element_text(face="bold", colour="black", size=28),
         axis.text.y  = element_text(angle=0, vjust=0.5, size=28, colour = "black")) +
-  ylim(0.5, 20)  
+  ylim(0.5, 20) +
+  xlim(min, max)
 plot
 
 

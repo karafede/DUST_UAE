@@ -164,7 +164,7 @@ write.csv(All_AWS_data, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2
 ################################################################################
 ################################################################################
 
-######## PLOT correlations #####################################################
+######## PLOT TIME SERIES #####################################################
 
 library(dplyr)
 library(readr)
@@ -315,7 +315,7 @@ write.csv(Radiance_corr, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_
 
 Radiance_corr_selected_Sites <- Radiance_corr %>%
   filter(station %in% c("Al Faqa", "Madinat Zayed", "Hatta",
-                        "Al Ain","Alkhazna", "Rezeen"))
+                        "Al Ain","Alkhazna", "Rezeen", "Abu Dhabi", "Al Dhaid"))
 
 Radiance_corr_selected_Sites <- Radiance_corr_selected_Sites %>%
   filter(DateTime <= "2015-04-04 03:00:00" & DateTime >= "2015-03-31 04:00:00")
@@ -369,6 +369,9 @@ jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHE
 par(mar=c(4, 10, 9, 2) + 0.3)
 oldpar <- par(las=1)
 
+
+min <- as.POSIXct("2015-03-31 00:00:00") 
+max <- as.POSIXct("2015-04-04 11:00:00") 
 
 plot <- ggplot(Radiance_corr_selected_Sites, aes(DateTime, Radiation)) + 
   theme_bw() +
