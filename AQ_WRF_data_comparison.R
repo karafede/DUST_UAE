@@ -259,6 +259,17 @@ AQ_WRF_2015_PM10_selected_Sites  <- AQ_WRF_2015_PM10 %>%
                      "Liwa Oasis", "Baniyas School",
                      "Bida Zayed", "Mussafah"))
 
+# change site names....into ANONIMIZED site names
+levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Baniyas School$","A1", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Bida Zayed$","A2", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Kalba$","A3", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Khalifa City A$","A4", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Liwa Oasis$","A5", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Mussafah$","A6", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+
+
+
+
 ###################################################################################################################
 ######### plot TIME-SERIES of AQ PM10 data and WRF PM10 data ######################################################
 ###################################################################################################################

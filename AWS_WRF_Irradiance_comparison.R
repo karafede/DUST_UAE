@@ -320,6 +320,22 @@ Radiance_corr_selected_Sites <- Radiance_corr %>%
 Radiance_corr_selected_Sites <- Radiance_corr_selected_Sites %>%
   filter(DateTime <= "2015-04-04 03:00:00" & DateTime >= "2015-03-31 04:00:00")
 
+Radiance_corr_selected_Sites <- Radiance_corr_selected_Sites %>%
+  filter(station %in% c("Al Faqa", "Madinat Zayed", "Hatta",
+                        "Alkhazna", "Rezeen", "Al Dhaid"))
+
+
+# change site names....into ANONIMIZED site names
+levels(Radiance_corr_selected_Sites$station) <- gsub("^Al Dhaid$","I", levels(Radiance_corr_selected_Sites$station))
+levels(Radiance_corr_selected_Sites$station) <- gsub("^Al Faqa$","II", levels(Radiance_corr_selected_Sites$station))
+levels(Radiance_corr_selected_Sites$station) <- gsub("^Alkhazna$","III", levels(Radiance_corr_selected_Sites$station))
+levels(Radiance_corr_selected_Sites$station) <- gsub("^Hatta$","IV", levels(Radiance_corr_selected_Sites$station))
+levels(Radiance_corr_selected_Sites$station) <- gsub("^Madinat Zayed$","V", levels(Radiance_corr_selected_Sites$station))
+levels(Radiance_corr_selected_Sites$station) <- gsub("^Rezeen$","VI", levels(Radiance_corr_selected_Sites$station))
+
+
+
+
 
 ###### CORRECTED DATA ######################################################################################################
 #############################################################################################################################
@@ -379,7 +395,7 @@ plot <- ggplot(Radiance_corr_selected_Sites, aes(DateTime, Radiation)) +
   geom_line(aes(y = WRF_CHEM_Irr, col = "WRF_CHEM_Irr"), alpha=1, col="blue", size =1) +
   facet_wrap( ~ station, ncol=2) +
   theme(legend.position="none") + 
-  theme(strip.text = element_text(size = 28)) + 
+  theme(strip.text = element_text(size = 30)) + 
   ylab(expression(paste("Radiance W",m^-2),size=20)) +
   theme(axis.title.x=element_blank(),
         axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=28, colour = "black", face="bold")) +

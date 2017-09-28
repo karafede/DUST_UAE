@@ -146,6 +146,22 @@ AWS_WRF_2015_WS_selected_Sites  <- AWS_WRF_2015_WS %>%
   filter(station %in% c("Al Faqa", "Madinat Zayed", "Hatta",
                         "Al Ain","Alkhazna", "Rezeen", "Abu Dhabi", "Al Dhaid"))
 
+AWS_WRF_2015_WS_selected_Sites <- AWS_WRF_2015_WS %>%
+  filter(station %in% c("Al Faqa", "Madinat Zayed", "Hatta",
+                        "Alkhazna", "Rezeen", "Al Dhaid"))
+
+
+# change site names....into ANONIMIZED site names
+levels(AWS_WRF_2015_WS_selected_Sites$station) <- gsub("^Al Dhaid$","I", levels(AWS_WRF_2015_WS_selected_Sites$station))
+levels(AWS_WRF_2015_WS_selected_Sites$station) <- gsub("^Al Faqa$","II", levels(AWS_WRF_2015_WS_selected_Sites$station))
+levels(AWS_WRF_2015_WS_selected_Sites$station) <- gsub("^Alkhazna$","III", levels(AWS_WRF_2015_WS_selected_Sites$station))
+levels(AWS_WRF_2015_WS_selected_Sites$station) <- gsub("^Hatta$","IV", levels(AWS_WRF_2015_WS_selected_Sites$station))
+levels(AWS_WRF_2015_WS_selected_Sites$station) <- gsub("^Madinat Zayed$","V", levels(AWS_WRF_2015_WS_selected_Sites$station))
+levels(AWS_WRF_2015_WS_selected_Sites$station) <- gsub("^Rezeen$","VI", levels(AWS_WRF_2015_WS_selected_Sites$station))
+
+
+
+
 ###################################################################################################################
 ######### plot TIME-SERIES of AWS NCMS data data and WRF Temperature data #########################################
 ###################################################################################################################
@@ -195,7 +211,7 @@ plot <- ggplot(AWS_WRF_2015_WS_selected_Sites, aes(DateTime, wind_speed)) +
   geom_line(aes(y = WRF_CHEM_WS, col = "WRF_CHEM_WS"), alpha=1, col="blue", size = 1) +
   facet_wrap( ~ station, ncol=2) +
   theme(legend.position="none") + 
-  theme(strip.text = element_text(size = 26)) + 
+  theme(strip.text = element_text(size = 30)) + 
   ylab(expression(paste("Wind Speed (m/s)"))) +
   theme(axis.title.x=element_blank(),
         axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=28, colour = "black", face="bold")) +
