@@ -123,19 +123,6 @@ library(classInt)
 library(stringr)
 library(ggplot2)
 
-#### import the Arabian Peninsusula domain #############
-
-dir_ME <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
-### shapefile for WRF_domain
-shp_ME <- readOGR(dsn = dir_ME, layer = "ADMIN_domain_d01_WRFChem")
-
-
-shp_ME@data$name <- 1:nrow(shp_ME)
-plot(shp_ME)
-
-
-
-
 # set directory where we want to save the images
 setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png")
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/images_png")
@@ -220,7 +207,7 @@ for (i in 1:length(WRF_STACK_image@layers)) {
   "h1 { font-size: 3px;}"
   content <- paste('<h1><strong>', name_time,'', sep = "")
   
-  map <- leaflet(shp_ME) %>% 
+  map <- leaflet() %>% 
     addTiles() %>% 
     addTiles(group = "OSM (default)") %>%
     addProviderTiles("OpenStreetMap.Mapnik", group = "Road map") %>%
@@ -233,19 +220,14 @@ for (i in 1:length(WRF_STACK_image@layers)) {
     addRasterImage(WRF_STACK_image, 
                    colors = pal, 
                    opacity = 0.5, group = "WRF_CHEM") %>%
-
-    addPolygons(stroke = TRUE, smoothFactor = 1, fillOpacity = 0,
-                weight = 3, color = "#FFFFFF",
-                group = "ME") %>%
-    
     addLayersControl(
       baseGroups = c("Toner Lite", "Road map", "Satellite"),
-      overlayGroups = c("WRF_CHEM", "ME"),
-      options = layersControlOptions(collapsed = TRUE))
-    # addLegend("bottomright", pal = pal, values = c(min_val, max_val),
-    #           title = "<br><strong>PM<sub>10</sub> (<font face=symbol>m</font>g/m<sup>3</sup>) DUST </strong>",
-    #           labFormat = labelFormat(prefix = ""),
-    #           opacity = 1) 
+      overlayGroups = "WRF_CHEM",
+      options = layersControlOptions(collapsed = TRUE)) %>%
+    addLegend("bottomright", pal = pal, values = c(min_val, max_val),
+              title = "<br><strong>PM<sub>10</sub> (<font face=symbol>m</font>g/m<sup>3</sup>) DUST </strong>",
+              labFormat = labelFormat(prefix = ""),
+              opacity = 1)
   
   ## This is the png creation part
   saveWidget(map, 'temp.html', selfcontained = FALSE)
