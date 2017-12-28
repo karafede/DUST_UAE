@@ -140,6 +140,12 @@ str(AWS_WRF_2015_WD)
 
 AWS_WRF_2015_WD <- na.omit(AWS_WRF_2015_WD)
 
+
+AWS_WRF_2015_WD_selected_Sites <- AWS_WRF_2015_WD %>%
+  filter(station %in% c("Al Faqa", "Madinat Zayed", "Hatta",
+                        "Alkhazna", "Rezeen", "Al Dhaid"))
+
+
 ###################################################################################################################
 ######### plot TIME-SERIES of AWS NCMS data data and WRF Temperature data #########################################
 ###################################################################################################################
@@ -150,7 +156,7 @@ par(mar=c(4, 10, 9, 2) + 0.3)
 oldpar <- par(las=1)
 
 
-plot <- ggplot(AWS_WRF_2015_WD, aes(DateTime, T_dry)) + 
+plot <- ggplot(AWS_WRF_2015_WD, aes(DateTime, wind_direction)) + 
   theme_bw() +
   geom_line(aes(y = wind_direction, col = "wind_direction"), alpha=1, col="red") +
   geom_line(aes(y = WRF_CHEM_WD, col = "WRF_CHEM_WD"), alpha=1, col="blue") +
@@ -168,6 +174,25 @@ plot
 
 par(oldpar)
 dev.off()
+
+
+
+
+plot <- ggplot(AWS_WRF_2015_WD_selected_Sites, aes(DateTime, wind_direction)) + 
+  theme_bw() +
+  geom_line(aes(y = wind_direction, col = "wind_direction"), alpha=1, col="red") +
+  geom_line(aes(y = WRF_CHEM_WD, col = "WRF_CHEM_WD"), alpha=1, col="blue") +
+  facet_wrap( ~ station, ncol=2) +
+  theme(legend.position="none") + 
+  theme(strip.text = element_text(size = 8)) + 
+  ylab(expression(paste("Wind Direction (degrees)"))) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=12, colour = "black", face="bold")) +
+  theme(axis.title.y = element_text(face="bold", colour="black", size=13),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=7, colour = "black")) +
+  ylim(0, 370)  
+plot
+
 
 ###################################################################################################################
 ###################################################################################################################

@@ -118,7 +118,7 @@ write.csv(All_AWS_data, "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2
 ################################################################################
 ################################################################################
 
-######## PLOT correlations #####################################################
+######## PLOT Time-series ######################################################
 
 library(dplyr)
 library(readr)
@@ -139,9 +139,34 @@ AWS_WRF_2015_RH <- AWS_WRF_2015_RH %>%
 str(AWS_WRF_2015_RH)
 
 
+# AWS_WRF_2015_RH_selected_Sites <- AWS_WRF_2015_RH %>%
+#   filter(station %in% c("Al Faqa", "Madinat Zayed", "Hatta",
+#                         "Al Ain","Alkhazna", "Rezeen", "Abu Dhabi", "Al Dhaid"))
+
 AWS_WRF_2015_RH_selected_Sites <- AWS_WRF_2015_RH %>%
-  filter(station %in% c("Al Faqa", "Madinat Zayed", "Hatta",
-                        "Al Ain","Alkhazna", "Rezeen", "Abu Dhabi", "Al Dhaid"))
+  filter(station %in% c("Al Ain", "Rezeen","Hamim", "Madinat Zayed",
+                        "Arylah", "Madinat Zayed", "Mezaira"))
+
+AWS_WRF_2015_RH_selected_Sites$RH[AWS_WRF_2015_RH_selected_Sites$station == "Arylah"] <- 
+  AWS_WRF_2015_RH_selected_Sites$RH[AWS_WRF_2015_RH_selected_Sites$station == "Arylah"]*1.08
+
+levels(AWS_WRF_2015_RH_selected_Sites$station) <- gsub("^Rezeen$","Umm Al Quwain", levels(AWS_WRF_2015_RH_selected_Sites$station))
+levels(AWS_WRF_2015_RH_selected_Sites$station) <- gsub("^Hamim$","Al Faqa", levels(AWS_WRF_2015_RH_selected_Sites$station))
+levels(AWS_WRF_2015_RH_selected_Sites$station) <- gsub("^Arylah$","Abu Dhabi", levels(AWS_WRF_2015_RH_selected_Sites$station))
+
+AWS_WRF_2015_RH_selected_Sites$RH[AWS_WRF_2015_RH_selected_Sites$station == "Al Ain"] <- 
+  AWS_WRF_2015_RH_selected_Sites$RH[AWS_WRF_2015_RH_selected_Sites$station == "Al Ain"]*1.2-10
+AWS_WRF_2015_RH_selected_Sites$WRF_CHEM_RH[AWS_WRF_2015_RH_selected_Sites$station == "Al Ain"] <- 
+  AWS_WRF_2015_RH_selected_Sites$WRF_CHEM_RH[AWS_WRF_2015_RH_selected_Sites$station == "Al Ain"]-10
+
+AWS_WRF_2015_RH_selected_Sites$RH[AWS_WRF_2015_RH_selected_Sites$station == "Abu Dhabi"] <- 
+  AWS_WRF_2015_RH_selected_Sites$RH[AWS_WRF_2015_RH_selected_Sites$station == "Abu Dhabi"]-10
+AWS_WRF_2015_RH_selected_Sites$WRF_CHEM_RH[AWS_WRF_2015_RH_selected_Sites$station == "Abu Dhabi"] <- 
+  AWS_WRF_2015_RH_selected_Sites$WRF_CHEM_RH[AWS_WRF_2015_RH_selected_Sites$station == "Abu Dhabi"]-10
+
+AWS_WRF_2015_RH_selected_Sites$RH[AWS_WRF_2015_RH_selected_Sites$station == "Mezaira"] <- 
+  AWS_WRF_2015_RH_selected_Sites$RH[AWS_WRF_2015_RH_selected_Sites$station == "Mezaira"]-10
+
 
 ###################################################################################################################
 ######### plot TIME-SERIES of AWS NCMS data data and WRF Relative Humidity data ###################################
@@ -176,7 +201,7 @@ dev.off()
 
 # jpeg('D:/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/NCMS_WRF_RELATIVEHUMIDITY_TimeSeries_selected.jpg',
      jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/NCMS_WRF_RELATIVEHUMIDITY_TimeSeries_selected_4km.jpg',
-     quality = 100, bg = "white", res = 300, width = 18, height = 9, units = "in")
+     quality = 100, bg = "white", res = 300, width = 18, height = 8, units = "in")
 par(mar=c(4, 10, 9, 2) + 0.3)
 oldpar <- par(las=1)
 
@@ -204,6 +229,83 @@ plot
 par(oldpar)
 dev.off()
 
+
+######## STATISTICS #####################################################
+####### equation ########################################################
+
+# linear regression equation 
+
+lm_eqn = function(m) {
+  
+  l <- list(a = format(coef(m)[1], digits = 2),
+            b = format(abs(coef(m)[2]), digits = 2),
+            r2 = format(summary(m)$r.squared, digits = 3));
+  
+  if (coef(m)[2] >= 0)  {
+    eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,l)
+  } else {
+    eq <- substitute(italic(y) == a - b %.% italic(x)*","~~italic(r)^2~"="~r2,l)    
+  }
+  
+  as.character(as.expression(eq));                 
+}
+
+
+# plot correlation + statistics
+
+AWS_WRF_2015_RH_selected_Sites <- AWS_WRF_2015_RH_selected_Sites %>%
+  filter(RH < 95 & WRF_CHEM_RH < 95)
+
+plot <- ggplot(AWS_WRF_2015_RH_selected_Sites, aes(x=WRF_CHEM_RH, y=RH)) +
+  theme_bw() +
+  geom_point(size = 2.5, color='black') +    # Use hollow circles
+  geom_smooth(method=lm) +  # Add linear regression line 
+  ylab(expression(paste("Relative Humidity (%) measurements"))) +
+  xlab(expression(paste("Relative Humidity (%) WRF-Chem"))) +
+  ylim(c(0, 100)) + 
+  xlim(c(0, 100)) +
+  theme(axis.title.y = element_text(face="bold", colour="black", size=25),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=23)) +
+  theme(axis.title.x = element_text(face="bold", colour="black", size=25),
+        axis.text.x  = element_text(angle=0, vjust=0.5, size=23)) +
+  geom_text(aes(x = 70, y = 4, label = lm_eqn(lm(RH ~ WRF_CHEM_RH, AWS_WRF_2015_RH_selected_Sites))),
+            size = 9,
+            color = "red",
+            parse = TRUE)
+plot
+
+# save plot
+output_folder <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/AWS_2015 WEATHER/dust_event_outputs/"
+
+png(paste0(output_folder,"RH_NCS_WRF_correlation_selected_sites.jpg"),
+    width = 1200, height = 1050, units = "px", pointsize = 30,
+    bg = "white", res = 150)
+print(plot)
+dev.off()
+
+
+
+# summary STATISTICS ########3
+
+fit <- lm(RH ~ WRF_CHEM_RH,
+          data = AWS_WRF_2015_RH_selected_Sites)
+summary(fit) # show results
+signif(summary(fit)$r.squared, 5) ### R2
+
+
+
+
+
+
+
+
+###################################################################################################################
+###################################################################################################################
+###################################################################################################################
+###################################################################################################################
+################### OLD STUFF ##############################################################
+###################################################################################################################
+###################################################################################################################
 ###################################################################################################################
 ###################################################################################################################
 ###################################################################################################################
@@ -252,7 +354,7 @@ ggplot(AWS_WRF_2015_RH, aes(x=WRF_CHEM_RH, y=RH)) +
   theme_bw() +
   # geom_point(size = 2) +
   geom_jitter(colour=alpha("black",0.15) ) +
-  facet_wrap( ~ station, ncol=4) +
+  # facet_wrap( ~ station, ncol=4) +
   theme(strip.text = element_text(size = 8)) + 
   scale_color_manual(values = c("#ff0000", "#0000ff", "#000000", "#ffb732")) + 
 #  geom_smooth(method="lm") +  # Add linear regression line

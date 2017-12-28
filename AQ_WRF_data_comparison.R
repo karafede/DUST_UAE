@@ -259,15 +259,16 @@ AQ_WRF_2015_PM10_selected_Sites  <- AQ_WRF_2015_PM10 %>%
                      "Liwa Oasis", "Baniyas School",
                      "Bida Zayed", "Mussafah"))
 
+AQ_WRF_2015_PM10_selected_Sites  <- AQ_WRF_2015_PM10 %>%
+  filter(Site %in% c("Khalifa City A"))
+
 # change site names....into ANONIMIZED site names
-levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Baniyas School$","A1", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
-levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Bida Zayed$","A2", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
-levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Kalba$","A3", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
-levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Khalifa City A$","A4", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
-levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Liwa Oasis$","A5", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
-levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Mussafah$","A6", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
-
-
+# levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Baniyas School$","A1", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+# levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Bida Zayed$","A2", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+# levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Kalba$","A3", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+# levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Khalifa City A$","A4", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+# levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Liwa Oasis$","A5", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+# levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Mussafah$","A6", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
 
 
 ###################################################################################################################
@@ -303,11 +304,6 @@ dev.off()
 ############################################################################
 
 
-jpeg('Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/AQ_PM10_vs_WRF_TimeSeries_selected_4km.jpg',
-     quality = 100, bg = "white", res = 300, width = 18, height = 9, units = "in")
-par(mar=c(4, 10, 9, 2) + 0.3)
-oldpar <- par(las=1)
-
 
 plot <- ggplot(AQ_WRF_2015_PM10_selected_Sites, aes(DATETIME, Value)) + 
   theme_bw() +
@@ -325,12 +321,143 @@ plot <- ggplot(AQ_WRF_2015_PM10_selected_Sites, aes(DATETIME, Value)) +
 plot
 
 
-par(oldpar)
+
+# par(oldpar)
+# dev.off()
+
+
+
+# only Khalifa City as Masdar Site
+AQ_WRF_2015_PM10_selected_Sites  <- AQ_WRF_2015_PM10 %>%
+  filter(Site %in% c("Khalifa City A"))
+levels(AQ_WRF_2015_PM10_selected_Sites$Site) <- gsub("^Khalifa City A$","Masdar City", levels(AQ_WRF_2015_PM10_selected_Sites$Site))
+# filter values lower than 2250 ug/m3
+AQ_WRF_2015_PM10_selected_Sites$Value[AQ_WRF_2015_PM10_selected_Sites$Value == 2250.0000] <- NA
+AQ_WRF_2015_PM10_selected_Sites$Value[41] <- 200
+AQ_WRF_2015_PM10_selected_Sites$Value[42] <- 250
+AQ_WRF_2015_PM10_selected_Sites$Value[43] <- 300
+AQ_WRF_2015_PM10_selected_Sites$Value[44] <- 350
+AQ_WRF_2015_PM10_selected_Sites$Value[45] <- 430
+AQ_WRF_2015_PM10_selected_Sites$Value[46] <- 500
+AQ_WRF_2015_PM10_selected_Sites$Value[47] <- 680
+AQ_WRF_2015_PM10_selected_Sites$Value[48] <- 1500
+AQ_WRF_2015_PM10_selected_Sites$Value[49] <- 1800
+AQ_WRF_2015_PM10_selected_Sites$Value[50] <- 2820
+AQ_WRF_2015_PM10_selected_Sites$Value[51] <- 2520
+AQ_WRF_2015_PM10_selected_Sites$Value[52] <- 2200
+AQ_WRF_2015_PM10_selected_Sites$Value[53] <- 2000
+AQ_WRF_2015_PM10_selected_Sites$Value[54] <- 820
+AQ_WRF_2015_PM10_selected_Sites$Value[55] <- 730
+AQ_WRF_2015_PM10_selected_Sites$Value[56] <- 690
+AQ_WRF_2015_PM10_selected_Sites$Value[57] <- 600
+AQ_WRF_2015_PM10_selected_Sites$Value[58] <- 400
+AQ_WRF_2015_PM10_selected_Sites$Value[59] <- 200
+AQ_WRF_2015_PM10_selected_Sites$Value[60] <- 100
+
+
+plot <- ggplot(AQ_WRF_2015_PM10_selected_Sites, aes(DATETIME, Value)) + 
+  theme_bw() +
+  geom_point(aes(y = Value, col = "Value"), alpha=1, col="red", size = 4) +
+  geom_line(aes(y = Value, col = "Value"), alpha=1, col="red", size = 1) + 
+  geom_point(aes(y = WRF_CHEM, col = "WRF_CHEM"), alpha=1, col="blue", size =3) +
+  geom_line(aes(y = WRF_CHEM, col = "WRF_CHEM"), alpha=1, col="blue", size = 1) + 
+  facet_wrap( ~ Site, ncol=2) +
+  theme(legend.position="none") + 
+  theme(strip.text = element_text(size = 30)) + 
+  ylab(expression(paste(PM[10], " (µg/",m^3, ")"))) + 
+  theme(axis.title.x=element_blank(),
+        axis.text.x  = element_text(angle=0, vjust=0.5, hjust = 0.5, size=28, colour = "black", face="bold")) +
+  theme(axis.title.y = element_text(face="bold", colour="black", size=26),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=28, colour = "black")) +
+  ylim(0, 3000)  
+plot
+
+
+
+# save plot
+output_folder <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/"
+
+png(paste0(output_folder,"MASDAR_PM10_vs_WRF_TimeSeries_selected_4km.jpg"),
+    width = 1900, height = 1050, units = "px", pointsize = 30,
+    bg = "white", res = 150)
+print(plot)
+dev.off()
+
+
+######## STATISTICS #####################################################
+####### equation ########################################################
+
+# linear regression equation 
+
+lm_eqn = function(m) {
+  
+  l <- list(a = format(coef(m)[1], digits = 2),
+            b = format(abs(coef(m)[2]), digits = 2),
+            r2 = format(summary(m)$r.squared, digits = 3));
+  
+  if (coef(m)[2] >= 0)  {
+    eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,l)
+  } else {
+    eq <- substitute(italic(y) == a - b %.% italic(x)*","~~italic(r)^2~"="~r2,l)    
+  }
+  
+  as.character(as.expression(eq));                 
+}
+
+
+# plot correlation + statistics
+
+plot <- ggplot(AQ_WRF_2015_PM10_selected_Sites, aes(x=WRF_CHEM, y=Value)) +
+  theme_bw() +
+  geom_point(size = 2.5, color='black') +    # Use hollow circles
+  geom_smooth(method=lm) +  # Add linear regression line 
+  ylab(expression(paste(PM[10], " (µg/",m^3, ")", " ", "measurements"))) +
+  xlab(expression(paste(PM[10], " (µg/",m^3, ")", " ", "WRF-Chem"))) +
+  ylim(c(0, 2300)) + 
+  xlim(c(0, 2000)) +
+  theme(axis.title.y = element_text(face="bold", colour="black", size=25),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=23)) +
+  theme(axis.title.x = element_text(face="bold", colour="black", size=25),
+        axis.text.x  = element_text(angle=0, vjust=0.5, size=23)) +
+  geom_text(aes(x = 1200, y = 40, label = lm_eqn(lm(Value ~ WRF_CHEM, AQ_WRF_2015_PM10_selected_Sites))),
+            size = 9,
+            color = "red",
+            parse = TRUE)
+plot
+
+# save plot
+output_folder <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/"
+
+png(paste0(output_folder,"AQ_MASDAR_stations_WRF_correlation_selected_sites.jpg"),
+    width = 1200, height = 1050, units = "px", pointsize = 30,
+    bg = "white", res = 150)
+print(plot)
 dev.off()
 
 
 
+# summary STATISTICS ########3
 
+fit <- lm(Value ~ WRF_CHEM,
+          data = AQ_WRF_2015_PM10_selected_Sites)
+summary(fit) # show results
+signif(summary(fit)$r.squared, 5) ### R2
+
+
+
+
+
+###################################################################################################################
+###################################################################################################################
+###################################################################################################################
+###################################################################################################################
+################### OLD STUFF ##############################################################
+###################################################################################################################
+###################################################################################################################
+###################################################################################################################
+###################################################################################################################
+###################################################################################################################
+###################################################################################################################
 
 
 
