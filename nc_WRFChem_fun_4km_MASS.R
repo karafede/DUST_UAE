@@ -17,7 +17,7 @@ setwd("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/DUST/4km")
 patt<- ".nc"
 filenames <- list.files(pattern = patt)
 filenames <- filenames
-filenames <- filenames[1:4]
+# filenames <- filenames[1:4]
 
 #############################################
 ## function to import multiple .nc files ####

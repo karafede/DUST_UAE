@@ -168,7 +168,7 @@ TS <- TS[1:115]
 WRF_STACK_image <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/AOD_WRFChem_02April2015_stack_5_DAYS.tif")
 
 
-output_folder <- "D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png/AOD_dust_3/"
+output_folder <- "D:/Dust_Event_UAE_2015/WRF_trial_runs/images_png/AOD_12km_DUST1_Em3/"
 
 ####### color pallet
 

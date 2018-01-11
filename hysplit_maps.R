@@ -5,6 +5,11 @@ library(leaflet)
 library(htmlwidgets)
 library(webshot)
 
+############################################################################################
+######### remember to empty the hysplit_output folder in the C:/ drive #####################
+############################################################################################
+
+# run hysplit script in the c:/ drive ##############
 data_abudhabi<- data_abudhabi %>%
   mutate(ID= floor(((yday(date)+ (hour(date)/24)))*100000))%>%
   mutate(ID_seq= hour.inc+73)
@@ -18,6 +23,8 @@ coordinates(data_abu) <- c("lon", "lat")
 paths <- sp::split(data_abu, data_abu[["ID"]])
 
 sp_lines <- SpatialLines(list(Lines(list(Line(paths[[1]])), as.character(data_abu$ID[0*73+1]))))
+
+jj <- 26
 
 for (jj in 2:25){
   kk<- jj-1

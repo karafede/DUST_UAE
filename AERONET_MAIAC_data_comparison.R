@@ -416,7 +416,106 @@ dev.off()
 ##########
 
 
+######## STATISTICS #####################################################
+####### equation ########################################################
+
+# linear regression equation 
+
+lm_eqn = function(m) {
+  
+  l <- list(a = format(coef(m)[1], digits = 2),
+            b = format(abs(coef(m)[2]), digits = 2),
+            r2 = format(summary(m)$r.squared, digits = 3));
+  
+  if (coef(m)[2] >= 0)  {
+    eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,l)
+  } else {
+    eq <- substitute(italic(y) == a - b %.% italic(x)*","~~italic(r)^2~"="~r2,l)    
+  }
+  
+  as.character(as.expression(eq));                 
+}
+
+
+# plot correlation + statistics
+
+##############################################################
+# AERONET vs WRF #############################################
+##############################################################
+
+plot <- ggplot(AERONET_MAIAC_WRF, aes(x=WRF, y=AOT)) +
+  theme_bw() +
+  geom_point(size = 2.5, color='black') +    # Use hollow circles
+  geom_smooth(method=lm) +  # Add linear regression line 
+  ylab(expression(paste("AOD (AERONET)"))) +
+  xlab(expression(paste("AOD (WRF-Chem)"))) +
+  ylim(c(0, 2.2)) + 
+  xlim(c(0, 2.3)) +
+  theme(axis.title.y = element_text(face="bold", colour="black", size=30),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=23)) +
+  theme(axis.title.x = element_text(face="bold", colour="black", size=30),
+        axis.text.x  = element_text(angle=0, vjust=0.5, size=23)) +
+  geom_text(aes(x = 1.5, y = 0.3, label = lm_eqn(lm(AOT ~ WRF, AERONET_MAIAC_WRF))),
+            size = 9,
+            color = "red",
+            parse = TRUE)
+plot
+
+# save plot
+output_folder <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/"
+
+png(paste0(output_folder,"aod_AERONET_WRF_correlation.jpg"),
+    width = 1200, height = 1050, units = "px", pointsize = 30,
+    bg = "white", res = 150)
+print(plot)
+dev.off()
 
 
 
+# summary STATISTICS ##################
+
+fit <- lm(AOT ~ WRF,
+          data = AERONET_MAIAC_WRF)
+summary(fit) # show results
+signif(summary(fit)$r.squared, 5) ### R2
+
+
+##############################################################
+# AERONET vs MODIS-MAIAC #####################################
+##############################################################
+
+plot <- ggplot(AERONET_MAIAC_WRF, aes(x=MAIAC, y=AOT)) +
+  theme_bw() +
+  geom_point(size = 2.5, color='black') +    # Use hollow circles
+  geom_smooth(method=lm) +  # Add linear regression line 
+  ylab(expression(paste("AOD (AERONET)"))) +
+  xlab(expression(paste("AOD (MODIS-MAIAC)"))) +
+  ylim(c(0, 2.2)) + 
+  xlim(c(0, 2.3)) +
+  theme(axis.title.y = element_text(face="bold", colour="black", size=30),
+        axis.text.y  = element_text(angle=0, vjust=0.5, size=23)) +
+  theme(axis.title.x = element_text(face="bold", colour="black", size=30),
+        axis.text.x  = element_text(angle=0, vjust=0.5, size=23)) +
+  geom_text(aes(x = 1.5, y = 0.3, label = lm_eqn(lm(AOT ~ MAIAC, AERONET_MAIAC_WRF))),
+            size = 9,
+            color = "red",
+            parse = TRUE)
+plot
+
+# save plot
+output_folder <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/"
+
+png(paste0(output_folder,"aod_AERONET_MAIAC_correlation.jpg"),
+    width = 1200, height = 1050, units = "px", pointsize = 30,
+    bg = "white", res = 150)
+print(plot)
+dev.off()
+
+
+# summary STATISTICS ##################
+
+fit <- lm(AOT ~ MAIAC,
+          data = AERONET_MAIAC_WRF)
+summary(fit) # show results
+signif(summary(fit)$r.squared, 5) ### R2
 
