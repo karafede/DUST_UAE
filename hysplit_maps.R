@@ -10,26 +10,26 @@ library(webshot)
 ############################################################################################
 
 # run hysplit script in the c:/ drive ##############
-data_abudhabi<- data_abudhabi %>%
+data_EXPO2020<- data_EXPO2020 %>%
   mutate(ID= floor(((yday(date)+ (hour(date)/24)))*100000))%>%
   mutate(ID_seq= hour.inc+73)
 
 
-data_abu<- data_abudhabi
+data_EXPO <- data_EXPO2020
 
-coordinates(data_abu) <- c("lon", "lat")
+coordinates(data_EXPO) <- c("lon", "lat")
 
 
-paths <- sp::split(data_abu, data_abu[["ID"]])
+paths <- sp::split(data_EXPO, data_EXPO[["ID"]])
 
-sp_lines <- SpatialLines(list(Lines(list(Line(paths[[1]])), as.character(data_abu$ID[0*73+1]))))
+sp_lines <- SpatialLines(list(Lines(list(Line(paths[[1]])), as.character(data_EXPO$ID[0*73+1]))))
 
 jj <- 26
 
 for (jj in 2:25){
   kk<- jj-1
   
-l <- SpatialLines(list(Lines(list(Line(paths[[jj]])), as.character(data_abu$ID[kk*73+1]))))
+l <- SpatialLines(list(Lines(list(Line(paths[[jj]])), as.character(data_EXPO$ID[kk*73+1]))))
 sp_lines <- spRbind(sp_lines, l)
 }
 
@@ -38,11 +38,12 @@ sp_lines <- spRbind(sp_lines, l)
 ############# map ###############################################################################
 #################################################################################################
 
-col_names<- read.csv("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/colorbar.csv")
+col_names <- read.csv("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/colorbar.csv")
 
 
-map <- leaflet(data = data_abudhabi) %>%
+map <- leaflet(data = data_EXPO2020) %>%
   setView(53, 23, 5) %>%
+  addProviderTiles("OpenStreetMap.Mapnik", group = "Road map") %>%
   addProviderTiles("Hydda.Full", group = "Hydda_Full") %>%
   addProviderTiles("Thunderforest.Landscape", group = "Topographical") %>%
   addProviderTiles("Esri.WorldImagery", group = "Satellite") %>%
@@ -61,7 +62,7 @@ map <- leaflet(data = data_abudhabi) %>%
   # # labFormat = labelFormat(prefix = ""), labels = c("2015-04-02 01:00","2015-04-02 09:00", "2015-04-02 13:00",
   # #                                                  "2015-04-02 18:00", "2015-04-02 20:00" ,"2015-04-02 23:00"), opacity = 1) %>%
   addLayersControl(
-    baseGroups = c("Toner Lite", "Hydda_Full", "Topographical", "Satellite"),
+    baseGroups = c("Road Map", "Toner Lite", "Hydda_Full", "Topographical", "Satellite"),
     overlayGroups = c("HYSPLIT"),
     options = layersControlOptions(collapsed = TRUE))
 map
@@ -72,7 +73,7 @@ qqq <- seq(from=1, to= 49, by =2)
  for(kk in (2:25)) {
 #  for(kk in (2:49)) {
   qq <- qqq[(kk)]
- map_2<- leaflet(data = data_abudhabi)%>%
+ map_2<- leaflet(data = data_EXPO2020)%>%
     addPolylines(data = sp_lines[kk], color="red", weight = 3, group='HYSPLIT', opacity = 1, fillOpacity= 1)
   
   
@@ -88,7 +89,7 @@ map
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/hysplit")
 
 saveWidget(map, 'temp.html', selfcontained = FALSE)
-webshot('temp.html', file = "Abu_Dhabi_500m_2April_2015.png", vwidth = 900, vheight = 900,
+webshot('temp.html', file = "EXPO2020_500m_February_2018.png", vwidth = 900, vheight = 900,
         cliprect = 'viewport')
 
 #########################################################################################
