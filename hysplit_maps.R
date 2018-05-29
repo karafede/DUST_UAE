@@ -49,18 +49,18 @@ map <- leaflet(data = data_EXPO2020) %>%
   addProviderTiles("Esri.WorldImagery", group = "Satellite") %>%
   addProviderTiles("Stamen.TonerLite", group = "Toner Lite") %>%
   addPolylines(data = sp_lines[1], color= col_names$R_colors[1], weight = 2, group='HYSPLIT', opacity = 1, fillOpacity= 1) %>%
-  # addLegend(
-  #   "bottomright", bins = 8, colors= c(as.vector(col_names$R_colors)[3],
-  #                                      as.vector(col_names$R_colors)[17],
-  #                                      as.vector(col_names$R_colors)[25],
-  #                                      as.vector(col_names$R_colors)[39],
-  #                                      as.vector(col_names$R_colors)[43],
-  #                                      as.vector(col_names$R_colors)[47]),
-  #   title = paste("<strong>24 hours runs"),
-  #   labFormat = labelFormat(prefix = ""), labels = c("2015-04-01 01:00","2015-04-01 09:00", "2015-04-01 13:00",
-  #                                                    "2015-04-01 18:00", "2015-04-01 20:00" ,"2015-04-01 23:00"), opacity = 1) %>%
-  # # labFormat = labelFormat(prefix = ""), labels = c("2015-04-02 01:00","2015-04-02 09:00", "2015-04-02 13:00",
-  # #                                                  "2015-04-02 18:00", "2015-04-02 20:00" ,"2015-04-02 23:00"), opacity = 1) %>%
+  addLegend(
+    "bottomright", bins = 8, colors= c(as.vector(col_names$R_colors)[3],
+                                       as.vector(col_names$R_colors)[17],
+                                       as.vector(col_names$R_colors)[25],
+                                       as.vector(col_names$R_colors)[39],
+                                       as.vector(col_names$R_colors)[43],
+                                       as.vector(col_names$R_colors)[47]),
+    title = paste("<strong>24 hours runs"),
+    labFormat = labelFormat(prefix = ""), labels = c("2018-02-13 01:00","2018-02-13 09:00", "2018-02-13 13:00",
+                                                     "2018-02-13 18:00", "2018-02-13 20:00" ,"2018-02-13 23:00"), opacity = 1) %>%
+  # labFormat = labelFormat(prefix = ""), labels = c("2015-04-02 01:00","2015-04-02 09:00", "2015-04-02 13:00",
+  #                                                  "2015-04-02 18:00", "2015-04-02 20:00" ,"2015-04-02 23:00"), opacity = 1) %>%
   addLayersControl(
     baseGroups = c("Road Map", "Toner Lite", "Hydda_Full", "Topographical", "Satellite"),
     overlayGroups = c("HYSPLIT"),
@@ -88,8 +88,8 @@ map
 
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/hysplit")
 
-saveWidget(map, 'temp.html', selfcontained = FALSE)
-webshot('temp.html', file = "EXPO2020_500m_February_2018.png", vwidth = 900, vheight = 900,
+saveWidget(map, 'EXPO2020_500m_13_February_2018_temp.html', selfcontained = FALSE)
+webshot('EXPO2020_500m_13_February_2018_temp.html', file = "EXPO2020_500m_13_February_2018.png", vwidth = 900, vheight = 900,
         cliprect = 'viewport')
 
 #########################################################################################

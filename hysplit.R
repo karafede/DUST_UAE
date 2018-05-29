@@ -127,8 +127,8 @@ data_EXPO2020 <- run_hysplit(
   runtime = -72,
   start_height = 500,
   model_height = 10000, #10000,
-  start = "2018-02-01",   # always load the month before (RP201502.gbl)
-  end = "2018-02-02",
+  start = "2018-02-13",   # always load the month before (RP201502.gbl)
+  end = "2018-02-14",
   hysplit_exec = "C:/hysplit4/exec", # run "hyts_std"
   hysplit_input = "C:/hysplit4/hysplit_met_data",
   hysplit_output = "C:/hysplit4/hysplit_output",
@@ -139,9 +139,9 @@ data_EXPO2020 <- run_hysplit(
 
 # plot backtrajectories
 
-trajPlot(data_abudhabi, orientation = c(0, 0, 0),projection = "lambert",
-         col = "blue", lwd = 2, key.pos = "left", key.col = 1, grid.col = "transparent",
-         xlim= c(48, 57), ylim = c(10,40), map.cols = "white", map.alpha = 0.4)
+# trajPlot(data_abudhabi, orientation = c(0, 0, 0),projection = "lambert",
+#          col = "blue", lwd = 2, key.pos = "left", key.col = 1, grid.col = "transparent",
+#          xlim= c(48, 57), ylim = c(10,40), map.cols = "white", map.alpha = 0.4)
 
 trajPlot(data_EXPO2020, orientation = c(0, 0, 0),projection = "lambert",
          col = "blue", lwd = 2, key.pos = "left", key.col = 1, grid.col = "transparent",
