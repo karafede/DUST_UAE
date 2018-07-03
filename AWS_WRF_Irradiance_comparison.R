@@ -334,7 +334,9 @@ levels(Radiance_corr_selected_Sites$station) <- gsub("^Madinat Zayed$","V", leve
 levels(Radiance_corr_selected_Sites$station) <- gsub("^Rezeen$","VI", levels(Radiance_corr_selected_Sites$station))
 
 
-
+Radiance_corr_selected_Sites <- Radiance_corr %>%
+  filter(station %in% c("Abu Dhabi", "Al Ain", "Al Faqa",
+                        "Madinat Zayed", "Mezaira", "Umm Al Quwain"))
 
 
 ###### CORRECTED DATA ######################################################################################################

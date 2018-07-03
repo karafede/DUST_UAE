@@ -8,8 +8,12 @@ library(stringr)
 memory.limit(size = 9000)
 
 # list .nc files
-#  setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/DUST SEVIRI/seviri_data_20150402/output_20150402_new")
-setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method")
+setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method")
+
+# MODIS MAIAC reference
+ref <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA/92_Aqua_MAIAC_crop.tif")
+# plot(ref)
+
 
 patt <- ".nc"
 filenames <- list.files(pattern = patt)
@@ -30,12 +34,13 @@ filenames <- filenames[7] # 2015-04-04
 # start <- as.POSIXct("2015-04-01")
 # start <- as.POSIXct("2015-04-02")
 # start <- as.POSIXct("2015-04-03")
-start <- as.POSIXct("2015-04-04")
+ start <- as.POSIXct("2015-04-04")
 
 interval <- 15 #minutes
 end <- start + as.difftime(1, units="days")
 TS <- seq(from=start, by=interval*60, to=end-1)
-TS <- TS[1:84]
+ TS <- TS[1:84]
+# TS <- TS[26:31] # TERRA time
 name <- str_sub(filenames, start = 1, end = -4)
 
 
@@ -65,8 +70,11 @@ name <- str_sub(filenames, start = 1, end = -4)
      # i = 56
    
   for (i in 1:dim(var_value)[3]){      # time dimension (always 96 scenes over one day)
+#    for (i in 26:31){ 
     r <- raster((var_value[ , , i]), xmn, xmx, ymn,  ymx, crs="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
     plot(r)
+    # reproject with the reference (MODIS MAIAC 1km)
+    # r = projectRaster(r, ref)
     name_time <- TS[i]
     names(r)<- paste("SEVIRI_", name_time, sep = "")
     all_rasters<- stack(all_rasters,r)
@@ -78,13 +86,14 @@ name <- str_sub(filenames, start = 1, end = -4)
  
  BBB <- lapply(filenames, import_nc_seviri) 
  
- # make a large stack raster with the 19*3=57 layeer for DUST_1
+ # make a large stack raster with all the masks
  ras_stack<- stack()
 
 # kk <- 50
  
  # for (jj in 1:19 ){         # number of .nc files
-   for (kk in 1:84){          # number of scenes (time stamp)
+  for (kk in 1:84){          # number of scenes (time stamp)
+ #    for (kk in 26:31){          # number of scenes (time stamp)
  # plot(BBB[[jj]],kk)
      plot(BBB[[1]],kk)
  # ras <- raster(BBB[[jj]], kk)
@@ -93,15 +102,145 @@ name <- str_sub(filenames, start = 1, end = -4)
    }
  #}
  
- 
- 
- # AAA <- ras_stack[[96]]
- # plot(AAA) 
- 
- 
+
 writeRaster(ras_stack, paste(name, "stack.tif", sep = "_") , options= "INTERLEAVE=BAND", overwrite=T)
 
 
+#########################################################################################
+#########################################################################################
+
+## Maps ###
+
+library(leaflet)
+library(webshot)
+library(htmlwidgets)
+library(RColorBrewer)
+library(raster)
+library(classInt)
+library(stringr)
+
+library(viridis)
+library(lattice)
+
+#### import the Arabian Peninsusula domain #############
+
+dir_ME <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
+dir_ME <- "D:/Dust_Event_UAE_2015/WRFChem_domain"
+### shapefile for WRF_domain
+shp_ME <- readOGR(dsn = dir_ME, layer = "ADMIN_domain_d01_12km_WRFChem")
+plot(shp_ME)
+
+dir <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
+shp_WRF <- readOGR(dsn = dir, layer = "domain_d01_12km_WRFChem")
+plot(shp_WRF)
+
+
+# gerate a time sequence of 6 SEVIRI scenes
+start <- as.POSIXct("2015-04-03")
+interval <- 15 #minutes
+end <- start + as.difftime(1, units="days")
+TS <- seq(from=start, by=interval*60, to=end-1)
+TS <- TS[1:84]
+# TS <- TS[26:31] # TERRA time
+
+setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method")
+
+output_folder_METFRANCE <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/plots_1km/"
+
+# SEVIRI MASK @ TERRA time
+# MASKS_STACK_image <- stack("Seviri_20150329_METFr_Orig_stack.tif")
+# MASKS_STACK_image <- stack("Seviri_20150330_METFr_Orig_stack.tif")
+# MASKS_STACK_image <- stack("Seviri_20150331_METFr_Orig_stack.tif")
+# MASKS_STACK_image <- stack("Seviri_20150401_METFr_Orig_stack.tif")
+# MASKS_STACK_image <- stack("Seviri_20150402_METFr_Orig_stack.tif")
+ MASKS_STACK_image <- stack("Seviri_20150403_METFr_Orig_stack.tif")
+# MASKS_STACK_image <- stack("Seviri_20150404_METFr_Orig_stack.tif")
+
+####### color pallet
+
+# max_val<- (max(vec_all, na.rm = T))
+max_val <- 1
+# min_val<- (min(vec_all,  na.rm = T))
+min_val <- 0
+
+
+low_IQR<- 0
+high_IQR <- 1
+
+cols <-  colorRampPalette(c("white", "red"))
+
+# i <- 24
+
+########################
+### plots of maps ######
+########################
+
+# raster_MASKS <- stack("Seviri_20150329_METFr_Orig_stack.tif")
+# raster_MASKS <- stack("Seviri_20150330_METFr_Orig_stack.tif")
+# raster_MASKS <- stack("Seviri_20150331_METFr_Orig_stack.tif")
+# raster_MASKS <- stack("Seviri_20150401_METFr_Orig_stack.tif")
+# raster_MASKS <- stack("Seviri_20150402_METFr_Orig_stack.tif")
+raster_MASKS <- stack("Seviri_20150403_METFr_Orig_stack.tif")
+# raster_MASKS <- stack("Seviri_20150404_METFr_Orig_stack.tif")
+ 
+
+for (i in 1:length(raster_MASKS@layers)) {
+  name_time <- TS[i]
+  # SEVIRI_MASKS <- raster("Seviri_20150329_METFr_Orig_stack.tif", band = i)
+  # SEVIRI_MASKS <- raster("Seviri_20150330_METFr_Orig_stack.tif", band = i)
+  # SEVIRI_MASKS <- raster("Seviri_20150331_METFr_Orig_stack.tif", band = i)
+  # SEVIRI_MASKS <- raster("Seviri_20150401_METFr_Orig_stack.tif", band = i)
+  # SEVIRI_MASKS <- raster("Seviri_20150402_METFr_Orig_stack.tif", band = i)
+   SEVIRI_MASKS <- raster("Seviri_20150403_METFr_Orig_stack.tif", band = i)
+  # SEVIRI_MASKS <- raster("Seviri_20150404_METFr_Orig_stack.tif", band = i)
+  
+  SEVIRI_MASKS <- crop(SEVIRI_MASKS, extent(shp_WRF))
+  SEVIRI_MASKS <- mask(SEVIRI_MASKS, shp_WRF) # RECTANGULAR
+  plot(SEVIRI_MASKS)
+  
+  h <- rasterVis::levelplot(SEVIRI_MASKS, 
+                            # h <- rasterVis::levelplot(TERRA_images, 
+                            margin=FALSE, main= as.character(name_time),
+                            xlab = "",
+                            ylab = "",
+                            ## about colorbar
+                            colorkey = FALSE,   
+                            ## about the axis
+                            par.settings=list(
+                              strip.border=list(col='transparent'),
+                              strip.background=list(col='transparent'),
+                              axis.line=list(col='black')
+                            ),
+                            scales=list(draw=T, alternating= F),            
+                            #col.regions = colorRampPalette(c("blue", "white","red"))(1e3),
+                            col.regions = cols,
+                            at=unique(c(seq(low_IQR, high_IQR, length.out=200)))) +
+    latticeExtra::layer(sp.polygons(shp_ME))
+  h
+  
+  png(paste0(output_folder_METFRANCE ,"MASK_SEVIRI_TERRA_", str_sub(name_time, start = 1, end = -10), "_",
+             str_sub(name_time, start = 12, end = -7), "_",
+             str_sub(name_time, start = 15, end = -4),
+             ".png"), width = 900, height = 900,
+      units = "px", pointsize = 50,
+      bg = "white", res = 200)
+  print(h)
+  dev.off()
+  
+}
+
+
+
+
+#########################################################################################
+#########################################################################################
+#########################################################################################
+#########################################################################################
+#########################################################################################
+#########################################################################################
+#########################################################################################
+#### leafleft map #######################################################################
+#########################################################################################
 #########################################################################################
 
 library(leaflet)
@@ -114,6 +253,7 @@ library(stringr)
 
 # set directory where we want to save the images
 setwd("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/images_png")
+setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/images_png")
 
 # save images as webshot from leaflet
 # reload rasters by band or layers (96 scenes)
@@ -142,6 +282,11 @@ for (i in 1:84) {
 # SEVIRI_STACK_image <- raster("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/Seviri_20150402_METFr_Orig_stack.tif", band = i)
 #  SEVIRI_STACK_image <- raster("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/Seviri_20150403_METFr_Orig_stack.tif", band = i)
   SEVIRI_STACK_image <- raster("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/Seviri_20150404_METFr_Orig_stack.tif", band = i)
+  
+  # SEVIRI_STACK_image <- raster("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/Seviri_20150401_METFr_Orig_stack.tif", band = i)
+  # SEVIRI_STACK_image <- raster("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/Seviri_20150402_METFr_Orig_stack.tif", band = i)
+  #  SEVIRI_STACK_image <- raster("D:/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/Seviri_20150403_METFr_Orig_stack.tif", band = i)
+  SEVIRI_STACK_image <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/Seviri_20150404_METFr_Orig_stack.tif", band = i)
   
 
 plot(SEVIRI_STACK_image)
