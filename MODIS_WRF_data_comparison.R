@@ -30,192 +30,331 @@ shp_UAE <- spTransform(shp_UAE, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=
 shp_UAE@data$name <- 1:nrow(shp_UAE)
 plot(shp_UAE)
 
-########################################################################
-########################################################################
 
-# # load one WRF raster image.....just a trial...only one hour....2015-03-31_03_00
-# 
-# # WRF_STACK_image <- raster("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02_April_2015_stack.tif", band = 3)
-# WRF_STACK_image <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02_April_2015_stack.tif", band = 3)
-# plot(WRF_STACK_image)
-# 
-# # overlay shape of UAE border
-# plot(shp_UAE, add=TRUE, lwd=1)
-# 
-# # WRF-chem resolution
-# res(WRF_STACK_image)
+#### importing the domain shapefile to use as a masking 
+dir <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
+dir <- "D:/Dust_Event_UAE_2015/WRFChem_domain"
+
+# larger WRF domain
+shp_WRF <- readOGR(dsn = dir, layer = "domain_d01_12km_WRFChem")
+plot(shp_WRF)
+# small WRF domain
+# shp_WRF <- readOGR(dsn = dir, layer = "ADMIN_domain_d01_WRFChem_small")
+# shp_WRF <- spTransform(shp_WRF, CRS("+init=epsg:4326"))
+
+plot(shp_WRF)
+plot(shp_UAE, add=TRUE, lwd=1)
+plot(shp_WRF, add=TRUE, lwd=1)
+
+dir_ME <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
+dir_ME <- "D:/Dust_Event_UAE_2015/WRFChem_domain"
+### shapefile for WRF_domain (ARABIAN PENINSULA)
+shp_ME <- readOGR(dsn = dir_ME, layer = "ADMIN_domain_d01_12km_WRFChem")
+plot(shp_ME)
+
+
+# load reference file (MAIAC 1km resolution)
+# MODIS MAIAC reference
+# ref <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/AQUA/92_Aqua_MAIAC_crop.tif")
+# load reference for SEVIRI data (2km)
+ref <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/Seviri_20150402_METFr_Orig_stack.tif", band = 20)
+ref <- crop(ref, extent(38.01822, 59.99447, 13, 34))
+plot(ref)
+plot(shp_ME, add = TRUE)
+
+# crop shp_ME
+shp_ME <- raster::crop(shp_ME, extent(38.01822, 59.99447, 13, 34))
+plot(shp_ME)
 
 ############################################################################
 # read all WRF  bands in a stack raster ####################################
 
-# WRF_STACK_image <- stack("D:/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02_April_2015_stack.tif")
-WRF_STACK_image <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif")
-n <- length(WRF_STACK_image@layers)-1
 
+WRF_AOD_09_00_April_1 <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif",
+                                band = 25)*6.25
+plot(WRF_AOD_09_00_April_1)
 
-# generate a time sequence for the WRF-Chem run at intervals of 1 hour (should be 144 images)
-start <- as.POSIXct("2015-03-29 00:00:00")
-interval <- 60 #minutes
-end <- start + as.difftime(6, units="days")
-TS <- seq(from=start, by=interval*60, to=end)   # same time series as the AQ data
-TS <- TS[1:144]
+WRF_AOD_09_00_April_2 <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif",
+                                band = 51)*6.25
+plot(WRF_AOD_09_00_April_2)
+
+WRF_AOD_09_00_April_3 <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_AOD_FK/extinction55/12km/AOD_12km_WRFChem_DUST1_Em3.tif",
+                                band = 80)*6.25
+plot(WRF_AOD_09_00_April_3)
+
+# make a stack
+
+WRF_AOD_stack <- stack(WRF_AOD_09_00_April_1,
+                       WRF_AOD_09_00_April_2,
+                       WRF_AOD_09_00_April_3)
+
+plot(WRF_AOD_stack)
+
+# WRF_STACK_image <- stack("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif")
+# n <- length(WRF_STACK_image@layers)-1
+# 
+# 
+# # generate a time sequence for the WRF-Chem run at intervals of 1 hour (should be 144 images)
+# start <- as.POSIXct("2015-03-29 00:00:00")
+# interval <- 60 #minutes
+# end <- start + as.difftime(6, units="days")
+# TS <- seq(from=start, by=interval*60, to=end)   # same time series as the AQ data
+# TS <- TS[1:144]
 
 
 # average WRF rasters from 11am to 1pm (I will get 3 rasters at the same time of the MODIS/MAIAC data)
 # MODIS TERRA: from 10 to 11 am
 # MODIS AQUA: from 13 to 14
 
-WRF_2015_03_29_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 11) +
-                     raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 12))/2
 
-plot(WRF_2015_03_29_TERRA)
-
-
-WRF_2015_03_30_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 35) +
-                     raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 36))/2
-
-plot(WRF_2015_03_30_TERRA)
-
-
-
-WRF_2015_03_31_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 59) +
-                   raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 60))/2
-
-plot(WRF_2015_03_31_TERRA)
-
-
-
-WRF_2015_04_01_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 83) +
-                     raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 84))/2
-
-plot(WRF_2015_04_01_TERRA)
-
-
-
-WRF_2015_04_02_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 107) +
-                     raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 108))/2
-
-plot(WRF_2015_04_02_TERRA)
-
-
-WRF_2015_04_03_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 131) +
-                     raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 132))/2
-
-plot(WRF_2015_04_03_TERRA)
-
-
-# MODIS AQUA: from 13 to 14 ##############################################################################################################
-
-WRF_2015_03_29_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 14) +
-                           raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 15))/2
-
-plot(WRF_2015_03_29_AQUA)
-
-
-
-WRF_2015_03_30_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 38) +
-                           raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 39))/2
-
-plot(WRF_2015_03_30_AQUA)
-
-
-
-WRF_2015_03_31_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 62) +
-                           raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 63))/2
-
-plot(WRF_2015_03_31_AQUA)
-
-
-
-
-WRF_2015_04_01_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 86) +
-                           raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 87))/2
-
-plot(WRF_2015_04_01_AQUA)
-
-
-
-
-WRF_2015_04_02_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 110) +
-                           raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 111))/2
-
-plot(WRF_2015_04_02_AQUA)
-
-
-
-WRF_2015_04_03_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 134) +
-                           raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 135))/2
-
-plot(WRF_2015_04_03_AQUA)
-
-
-
-# WRF_2015_03_29 <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 12) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 13) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 14))/3
+# WRF_2015_03_29_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 11) +
+#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 12))/2
 # 
-# plot(WRF_2015_03_29)
+# plot(WRF_2015_03_29_TERRA)
+# 
+# 
+# WRF_2015_03_30_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 35) +
+#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 36))/2
+# 
+# plot(WRF_2015_03_30_TERRA)
 # 
 # 
 # 
-# WRF_2015_03_30 <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 36) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 37) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 38))/3
+# WRF_2015_03_31_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 59) +
+#                    raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 60))/2
 # 
-# plot(WRF_2015_03_30)
-# 
-# 
-# 
-# WRF_2015_03_31 <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 60) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 61) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 62))/3
-# 
-# plot(WRF_2015_03_31)
+# plot(WRF_2015_03_31_TERRA)
 # 
 # 
 # 
-# WRF_2015_04_01 <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 84) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 85) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 86))/3
+# WRF_2015_04_01_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 83) +
+#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 84))/2
 # 
-# plot(WRF_2015_04_01)
-# 
+# plot(WRF_2015_04_01_TERRA)
 # 
 # 
-# WRF_2015_04_02 <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 108) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 109) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 110))/3
 # 
-# plot(WRF_2015_04_02)
+# WRF_2015_04_02_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 107) +
+#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 108))/2
+# 
+# plot(WRF_2015_04_02_TERRA)
 # 
 # 
-# WRF_2015_04_03 <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 132) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 133) +
-#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 134))/3
+# WRF_2015_04_03_TERRA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 131) +
+#                      raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 132))/2
 # 
-# plot(WRF_2015_04_03)
-
+# plot(WRF_2015_04_03_TERRA)
+# 
+# 
+# # MODIS AQUA: from 13 to 14 ##############################################################################################################
+# 
+# WRF_2015_03_29_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 14) +
+#                            raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 15))/2
+# 
+# plot(WRF_2015_03_29_AQUA)
+# 
+# 
+# 
+# WRF_2015_03_30_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 38) +
+#                            raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 39))/2
+# 
+# plot(WRF_2015_03_30_AQUA)
+# 
+# 
+# 
+# WRF_2015_03_31_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 62) +
+#                            raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 63))/2
+# 
+# plot(WRF_2015_03_31_AQUA)
+# 
+# 
+# 
+# 
+# WRF_2015_04_01_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 86) +
+#                            raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 87))/2
+# 
+# plot(WRF_2015_04_01_AQUA)
+# 
+# 
+# 
+# 
+# WRF_2015_04_02_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 110) +
+#                            raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 111))/2
+# 
+# plot(WRF_2015_04_02_AQUA)
+# 
+# 
+# 
+# WRF_2015_04_03_AQUA <- (raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 134) +
+#                            raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRF_trial_runs/DUST_WRFChem_02April2015_stack_6_DAYS_LARGE.tif", band = 135))/2
+# 
+# plot(WRF_2015_04_03_AQUA)
 
 
 # make a stack
-all_rasters_WRF <- stack(WRF_2015_03_29_TERRA,
-                         WRF_2015_03_30_TERRA,
-                         WRF_2015_03_31_TERRA,
-                         WRF_2015_04_01_TERRA,
-                         WRF_2015_04_02_TERRA,
-                         WRF_2015_04_03_TERRA,
-                         WRF_2015_03_29_AQUA,
-                         WRF_2015_03_30_AQUA,
-                         WRF_2015_03_31_AQUA,
-                         WRF_2015_04_01_AQUA,
-                         WRF_2015_04_02_AQUA,
-                         WRF_2015_04_03_AQUA)
+# all_rasters_WRF <- stack(WRF_2015_03_29_TERRA,
+#                          WRF_2015_03_30_TERRA,
+#                          WRF_2015_03_31_TERRA,
+#                          WRF_2015_04_01_TERRA,
+#                          WRF_2015_04_02_TERRA,
+#                          WRF_2015_04_03_TERRA,
+#                          WRF_2015_03_29_AQUA,
+#                          WRF_2015_03_30_AQUA,
+#                          WRF_2015_03_31_AQUA,
+#                          WRF_2015_04_01_AQUA,
+#                          WRF_2015_04_02_AQUA,
+#                          WRF_2015_04_03_AQUA)
+# 
+# # stack with 1, 2, 3 April 2015
+# stack_rasters_WRF <- stack(WRF_2015_04_01_AQUA,
+#                          WRF_2015_04_02_AQUA,
+#                          WRF_2015_04_03_AQUA)
 
-res(all_rasters_WRF)
 
 
 ######################################################################################################
 ######################################################################################################
+
+# load MAIAC data 
+
+# TERRA ## 
+# read stack raster MAIAC TERRA
+dir <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA/"
+stack_MAIAC_TERRA <- stack(paste0(dir,"TERRA_MAIAC_DUST_event_02_April_2015_1km.tif"))
+# subset layers as for MAIAC (1,2,3 APRIL)
+stack_MAIAC_TERRA <- stack(stack_MAIAC_TERRA@layers[4:6])
+plot(stack_MAIAC_TERRA)
+
+
+# change resolution of WRF_chem rasters
+WRF_AOD_stack <- projectRaster(WRF_AOD_stack, stack_MAIAC_TERRA)
+plot(WRF_AOD_stack)
+
+####################################################################
+### DIFFERENCE and CORRELATION between raster MODIS-MAIAC AQUA #####
+####################################################################
+
+all_rasters_TERRA <- stack()    # inizialise the raster stack
+
+# generate a time sequence of 3 days
+start <- as.POSIXct("2015-04-01 10:30")  # MODIS TERRA
+interval <- 60*12 #minutes (1 day interval)
+end <- start + as.difftime(2, units="days")  # 6 days
+TS <- seq(from=start, by=interval*60*2, to=end)
+
+# i <- 2
+
+for (i in 1:length(stack_MAIAC_TERRA@layers)) {
+  name_time <- TS[i]
+  # difference
+  diff_MAIAC_WRF <- stack_MAIAC_TERRA[[i]] - WRF_AOD_stack[[i]]    # 10:30 am
+  plot(diff_MAIAC_WRF)
+  all_rasters_TERRA <- stack(all_rasters_TERRA, diff_MAIAC_WRF)
+  dir <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA/"
+  writeRaster(all_rasters_TERRA, paste0(dir,"diff_TERRA_MAIAC_WRF_DUST_event_02_April_2015_1km.tif") , options= "INTERLEAVE=BAND", overwrite=T)
+  
+  print(i)
+  
+}
+
+########################################################################################
+#### reload data and create images #####################################################
+
+library(leaflet)
+library(webshot)
+library(htmlwidgets)
+library(RColorBrewer)
+library(raster)
+library(classInt)
+library(stringr)
+library(viridis)
+library(lattice)
+
+#### import the Arabian Peninsusula domain #############
+
+# gerate a time sequence of 2 days
+start <- as.POSIXct("2015-04-01 10:30")  # MODIS TERRA
+interval <- 60*12 #minutes (1 day interval)
+end <- start + as.difftime(2, units="days")  # 6 days
+TS <- seq(from=start, by=interval*60*2, to=end)
+
+setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA")
+
+output_folder_TERRA <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA/plots_1km/"
+
+# TERRA
+MAIAC_STACK_image <- stack("diff_TERRA_MAIAC_WRF_DUST_event_02_April_2015_1km.tif")
+
+
+####### color pallet
+
+low_IQR <- -3
+high_IQR <- 3
+
+########################
+### plots of maps ######
+########################
+
+# TERRA time
+raster_MAIAC <- stack("diff_TERRA_MAIAC_WRF_DUST_event_02_April_2015_1km.tif")
+
+for (i in 1:length(raster_MAIAC@layers)) {
+  name_time <- TS[i]
+  TERRA_WRF_images <- raster("diff_TERRA_MAIAC_WRF_DUST_event_02_April_2015_1km.tif", band = i)
+  plot(TERRA_WRF_images)
+  
+  h <- rasterVis::levelplot(TERRA_WRF_images, 
+                            # h <- rasterVis::levelplot(TERRA_images, 
+                            margin=FALSE, main= as.character(name_time),
+                            xlab = "",
+                            ylab = "",
+                            ## about colorbar
+                            colorkey=list(
+                              space='right',                   
+                              labels= list(at= floor(as.numeric( seq(low_IQR, high_IQR, length.out=7))),
+                                           font=3),
+                              axis.line=list(col='black'),
+                              width=0.75,
+                              title=expression(paste("     AOD") )
+                            ),   
+                            ## about the axis
+                            par.settings=list(
+                              strip.border=list(col='transparent'),
+                              strip.background=list(col='transparent'),
+                              axis.line=list(col='black')
+                            ),
+                            scales=list(draw=T, alternating= F),            
+                            col.regions = colorRampPalette(c("blue", "white","red")),
+                            # col.regions = cols,
+                            at=unique(c(seq(low_IQR, high_IQR, length.out=200)))) +
+    latticeExtra::layer(sp.polygons(shp_ME))
+  h
+  
+  png(paste0(output_folder_TERRA ,"diff_MAIAC_WRF_",str_sub(name_time, start = 1, end = -10), "_",
+             #  png(paste0(output_folder_TERRA ,str_sub(name_time, start = 1, end = -10), "_",
+             str_sub(name_time, start = 12, end = -7), "_",
+             str_sub(name_time, start = 15, end = -4),
+             ".png"), width = 900, height = 900,
+      units = "px", pointsize = 50,
+      bg = "white", res = 200)
+  print(h)
+  dev.off()
+  
+}
+
+
+###################################################################################
+###################################################################################
+#### OLD STUFF ####################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+
 
 # load MODIS-MAIAC data  (6 rasters for the same time range of WRF-CHEM) March 29, to April 3 2015
 
