@@ -228,6 +228,7 @@ plot(stack_MAIAC_TERRA)
 
 # change resolution of WRF_chem rasters
 WRF_AOD_stack <- projectRaster(WRF_AOD_stack, stack_MAIAC_TERRA)
+WRF_AOD_stack <- stack(WRF_AOD_stack)
 plot(WRF_AOD_stack)
 
 ####################################################################
@@ -257,8 +258,103 @@ for (i in 1:length(stack_MAIAC_TERRA@layers)) {
   
 }
 
+
+######################################################################################
+### plot WRF images ##################################################################
+######################################################################################
+
+library(leaflet)
+library(webshot)
+library(htmlwidgets)
+library(RColorBrewer)
+library(raster)
+library(classInt)
+library(stringr)
+library(viridis)
+library(lattice)
+
+#### import the Arabian Peninsusula domain #############
+
+# gerate a time sequence of 2 days
+start <- as.POSIXct("2015-04-01 10:30")  # MODIS TERRA
+interval <- 60*12 #minutes (1 day interval)
+end <- start + as.difftime(2, units="days")  # 6 days
+TS <- seq(from=start, by=interval*60*2, to=end)
+
+output_folder_TERRA <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/MAIAC_1km/TERRA/plots_1km/"
+
+####### color pallet
+
+vec_all <- as.vector(WRF_AOD_stack)
+
+max_val<- (max(vec_all, na.rm = T))
+min_val<- (min(vec_all,  na.rm = T))
+
+stat_dat <- summary(as.vector(WRF_AOD_stack))
+IQR <- (as.numeric((stat_dat[5]-stat_dat[2])* 2))# n is the space after IQR
+
+low_IQR<- if(floor(min_val) > floor(as.numeric((stat_dat[2]- IQR)))) floor(min_val) else floor(as.numeric((stat_dat[2]- IQR)))
+high_IQR <-if ( max_val > (as.numeric((stat_dat[5]+IQR)))) max_val else (as.numeric((stat_dat[5]+IQR)))
+
+
+# cool = rainbow(25, start=rgb2hsv(col2rgb('cyan'))[1], end=rgb2hsv(col2rgb('blue'))[1])
+cool = rainbow(50, start=rgb2hsv(col2rgb('green'))[1], end=rgb2hsv(col2rgb('blue'))[1])
+cool_2 = rainbow(25, start=rgb2hsv(col2rgb('yellow'))[1], end=rgb2hsv(col2rgb('green'))[1])
+warm = rainbow(125, start=rgb2hsv(col2rgb('red'))[1], end=rgb2hsv(col2rgb('yellow'))[1])
+cols = c(rev(cool), rev(cool_2), rev(warm))
+
+# i <- 2
+
+
+for (i in 1:length(WRF_AOD_stack@layers)) {
+  TITLE <- paste(TS[i], " (UTC)")
+  name_time <- TS[i]
+  AOD_images <- WRF_AOD_stack[[i]]
+  # plot(AOD_images)
+  
+  h <- rasterVis::levelplot(AOD_images, 
+                            margin=FALSE, main= as.character(TITLE),
+                            xlab = "",
+                            ylab = "",
+                            ## about colorbar
+                            colorkey=list(
+                              space='right',                   
+                              labels= list(at= floor(as.numeric( seq(low_IQR, high_IQR, length.out=7))),
+                                           font=3),
+                              axis.line=list(col='black'),
+                              width=0.75,
+                              title=expression(paste("     AOD") )
+                            ),   
+                            ## about the axis
+                            par.settings=list(
+                              strip.border=list(col='transparent'),
+                              strip.background=list(col='transparent'),
+                              axis.line=list(col='black')
+                            ),
+                            scales=list(draw=T, alternating= F),            
+                            #col.regions = colorRampPalette(c("blue", "white","red"))(1e3),
+                            col.regions = cols,
+                            at=unique(c(seq(low_IQR, high_IQR, length.out=200))),
+                            names.attr=rep(names(AOD_images))) +
+    latticeExtra::layer(sp.polygons(shp_ME))
+  h
+  
+  png(paste0(output_folder_TERRA ,"WRF_Chem_",str_sub(name_time, start = 1, end = -10), "_",
+             str_sub(name_time, start = 12, end = -7), "_",
+             str_sub(name_time, start = 15, end = -4),
+             ".png"), width = 900, height = 900,
+      units = "px", pointsize = 50,
+      bg = "white", res = 200)
+  print(h)
+  dev.off()
+  
+}
+
+
+
 ########################################################################################
 #### reload data and create images #####################################################
+### difference MAIAC-WRF chem ##########################################################
 
 library(leaflet)
 library(webshot)

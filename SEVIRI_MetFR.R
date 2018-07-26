@@ -21,20 +21,20 @@ filenames <- list.files(pattern = patt)
 # filenames <- filenames[1] # 2015-03-29
 # filenames <- filenames[2] # 2015-03-30
 # filenames <- filenames[3] # 2015-03-31
-# filenames <- filenames[4] # 2015-04-01
+filenames <- filenames[4] # 2015-04-01
 # filenames <- filenames[5] # 2015-04-02
 # filenames <- filenames[6] # 2015-04-03
-filenames <- filenames[7] # 2015-04-04
+# filenames <- filenames[7] # 2015-04-04
 
 # gerate a time sequence for a given day every 15 minuntes
 
 # start <- as.POSIXct("2015-03-29")
 # start <- as.POSIXct("2015-03-30")
 # start <- as.POSIXct("2015-03-31")
-# start <- as.POSIXct("2015-04-01")
+start <- as.POSIXct("2015-04-01")
 # start <- as.POSIXct("2015-04-02")
 # start <- as.POSIXct("2015-04-03")
- start <- as.POSIXct("2015-04-04")
+# start <- as.POSIXct("2015-04-04")
 
 interval <- 15 #minutes
 end <- start + as.difftime(1, units="days")
@@ -118,21 +118,52 @@ library(RColorBrewer)
 library(raster)
 library(classInt)
 library(stringr)
+library(rgdal)
 
 library(viridis)
 library(lattice)
 
 #### import the Arabian Peninsusula domain #############
 
+#### importing the UAE shapefile to use as a masking 
+dir <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/website_MODIS/UAE_boundary"
+### shapefile for UAE
+shp_UAE <- readOGR(dsn = dir, layer = "uae_emirates")
+
+# ----- Transform to EPSG 4326 - WGS84 (required)
+shp_UAE <- spTransform(shp_UAE, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+# names(shp)
+
+shp_UAE@data$name <- 1:nrow(shp_UAE)
+plot(shp_UAE)
+
+
+#### importing the domain shapefile to use as a masking 
+dir <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
+# dir <- "D:/Dust_Event_UAE_2015/WRFChem_domain"
+
+# larger WRF domain
+shp_WRF <- readOGR(dsn = dir, layer = "domain_d01_12km_WRFChem")
+plot(shp_WRF)
+
+plot(shp_WRF)
+plot(shp_UAE, add=TRUE, lwd=1)
+plot(shp_WRF, add=TRUE, lwd=1)
+
 dir_ME <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
-dir_ME <- "D:/Dust_Event_UAE_2015/WRFChem_domain"
-### shapefile for WRF_domain
+### shapefile for WRF_domain (ARABIAN PENINSULA)
 shp_ME <- readOGR(dsn = dir_ME, layer = "ADMIN_domain_d01_12km_WRFChem")
 plot(shp_ME)
 
-dir <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/WRFChem_domain"
-shp_WRF <- readOGR(dsn = dir, layer = "domain_d01_12km_WRFChem")
-plot(shp_WRF)
+# load reference for SEVIRI data (2km)
+ref <- raster("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015/SEVIRI_20150402_outputs/II_method/Seviri_20150402_METFr_Orig_stack.tif", band = 20)
+ref <- crop(ref, extent(38.01822, 59.99447, 13, 34))
+plot(ref)
+plot(shp_ME, add = TRUE)
+
+# crop shp_ME
+shp_ME <- raster::crop(shp_ME, extent(38.01822, 59.99447, 13, 34))
+plot(shp_ME)
 
 
 # gerate a time sequence of 6 SEVIRI scenes
@@ -152,8 +183,8 @@ output_folder_METFRANCE <- "Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UA
 # MASKS_STACK_image <- stack("Seviri_20150330_METFr_Orig_stack.tif")
 # MASKS_STACK_image <- stack("Seviri_20150331_METFr_Orig_stack.tif")
 # MASKS_STACK_image <- stack("Seviri_20150401_METFr_Orig_stack.tif")
-# MASKS_STACK_image <- stack("Seviri_20150402_METFr_Orig_stack.tif")
- MASKS_STACK_image <- stack("Seviri_20150403_METFr_Orig_stack.tif")
+#  MASKS_STACK_image <- stack("Seviri_20150402_METFr_Orig_stack.tif")
+MASKS_STACK_image <- stack("Seviri_20150403_METFr_Orig_stack.tif")
 # MASKS_STACK_image <- stack("Seviri_20150404_METFr_Orig_stack.tif")
 
 ####### color pallet
@@ -194,8 +225,8 @@ for (i in 1:length(raster_MASKS@layers)) {
    SEVIRI_MASKS <- raster("Seviri_20150403_METFr_Orig_stack.tif", band = i)
   # SEVIRI_MASKS <- raster("Seviri_20150404_METFr_Orig_stack.tif", band = i)
   
-  SEVIRI_MASKS <- crop(SEVIRI_MASKS, extent(shp_WRF))
-  SEVIRI_MASKS <- mask(SEVIRI_MASKS, shp_WRF) # RECTANGULAR
+  SEVIRI_MASKS <- crop(SEVIRI_MASKS, extent(shp_ME))
+  # SEVIRI_MASKS <- mask(SEVIRI_MASKS, shp_WRF) # RECTANGULAR
   plot(SEVIRI_MASKS)
   
   h <- rasterVis::levelplot(SEVIRI_MASKS, 

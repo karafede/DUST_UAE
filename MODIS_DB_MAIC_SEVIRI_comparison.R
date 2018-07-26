@@ -9,6 +9,7 @@ library(raster)
 library(leaflet)
 library(htmlwidgets)
 library(webshot)
+library(gstat)
 
 # setwd("D:/Dust_Event_UAE_2015")
 setwd("Z:/_SHARED_FOLDERS/Air Quality/Phase 2/Dust_Event_UAE_2015")
@@ -264,7 +265,7 @@ low_IQR<- if(floor(min_val) > floor(as.numeric((stat_dat[2]- IQR)))) floor(min_v
 high_IQR <-if ( max_val > (as.numeric((stat_dat[5]+IQR)))) max_val else (as.numeric((stat_dat[5]+IQR)))
 high_IQR <- 1
 
-# i <- 5
+# i <- 2
 
 low_IQR <- -2
 high_IQR <- 2
@@ -288,7 +289,7 @@ for (i in 1:length(raster_MAIAC@layers)) {
                             ylab = "",
                             ## about colorbar
                             colorkey=list(
-                              space='right',                   
+                              space='right', #"bottom"                   
                               labels= list(at= floor(as.numeric( seq(low_IQR, high_IQR, length.out=7))),
                                            font=3),
                               axis.line=list(col='black'),
@@ -432,7 +433,6 @@ for (i in 1:length(raster_MAIAC@layers)) {
 #################################################################################################
 ##### plot differences between MAIAC and SEVIRI #################################################
 
-
 library(leaflet)
 library(webshot)
 library(htmlwidgets)
@@ -488,7 +488,7 @@ high_IQR <- 1
 # TERRA
 raster_MASK <- stack("diff_TERRA_MAIAC_SEVIRI_DUST_event_02_April_2015_1km.tif")
 
-for (i in 1:length(raster_MAIAC@layers)) {
+for (i in 1:length(raster_MASK@layers)) {
   name_time <- TS[i]
   MASK_images <- raster("diff_TERRA_MAIAC_SEVIRI_DUST_event_02_April_2015_1km.tif", band = i)
   plot(MASK_images)
@@ -500,7 +500,7 @@ for (i in 1:length(raster_MAIAC@layers)) {
                             ylab = "",
                             ## about colorbar
                             colorkey=list(
-                              space='right',                   
+                              space='bottom',                   
                               labels= list(at= floor(as.numeric( seq(low_IQR, high_IQR, length.out=7))),
                                            font=3),
                               axis.line=list(col='black'),
@@ -514,7 +514,8 @@ for (i in 1:length(raster_MAIAC@layers)) {
                               axis.line=list(col='black')
                             ),
                             scales=list(draw=T, alternating= F),            
-                            col.regions = colorRampPalette(c("white", "yellow","red")),
+                            # col.regions = colorRampPalette(c("white", "yellow","red")),
+                            col.regions = colorRampPalette(c("blue", "white","red")),
                             # col.regions = cols,
                             at=unique(c(seq(low_IQR, high_IQR, length.out=200)))) +
     latticeExtra::layer(sp.polygons(shp_ME))
